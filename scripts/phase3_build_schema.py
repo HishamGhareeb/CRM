@@ -187,6 +187,12 @@ def main():
         f("nextFollowup","Next Follow-up","DATE"),
         f("notes","Notes","TEXT"),
         f("offerAngle","Offer Angle","TEXT"),
+        # Scraper-sourced detail fields (populated by phase4 bridge)
+        f("website","Website","LINKS"),
+        f("email","Email","EMAILS"),
+        f("rating","Rating","NUMBER", settings={"decimals": 1}),
+        f("reviewCount","Reviews","NUMBER", settings={"decimals": 0}),
+        f("fullAddress","Address","TEXT"),
     ]
     lead = ensure_object(objs, {
         "nameSingular":"lead","namePlural":"leads",

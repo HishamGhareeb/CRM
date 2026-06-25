@@ -88,7 +88,8 @@ ACTIVE_EARLY = [o["value"] for o in STAGE_OPTS
                 if o["value"] in ("OPT_2_CONTACTED","OPT_3_REPLIED")]
 
 # Twenty requires the label-identifier field (name) at the lowest position.
-COLS = ["name","industry","stage","source","owner","phone","estDeal","lastContact","nextFollowup","notes"]
+COLS = ["name","industry","stage","source","owner","phone","estDeal","lastContact","nextFollowup","notes",
+        "website","email","rating","reviewCount","fullAddress"]
 
 def main():
     have = existing_views()

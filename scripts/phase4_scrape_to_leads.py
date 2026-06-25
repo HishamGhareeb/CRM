@@ -111,21 +111,33 @@ def phone_input(raw):
 
 def digits(s): return re.sub(r"\D", "", s or "")
 
+def links_input(url):
+    url = (url or "").strip()
+    return {"primaryLinkUrl": url, "primaryLinkLabel": ""} if url else None
+
+def emails_input(raw):
+    parts = [e.strip() for e in (raw or "").split(",") if e.strip()]
+    if not parts: return None
+    return {"primaryEmail": parts[0], "additionalEmails": parts[1:]}
+
+def num(raw):
+    try: return float(raw)
+    except (TypeError, ValueError): return None
+
 def build_lead(row, owner):
-    notes = []
-    if row.get("website"): notes.append(f"Web: {row['website']}")
-    if row.get("emails"):  notes.append(f"Email: {row['emails']}")
-    rc, rr = row.get("review_count"), row.get("review_rating")
-    if rr: notes.append(f"Rating: {rr} ({rc or 0} reviews)")
-    if row.get("address"): notes.append(row["address"])
     lead = {"name": (row.get("title") or "").strip(),
             "phone": phone_input(row.get("phone")),
             "source": "GOOGLE_MAPS", "bucket": "ACTIVE",
             "stage": "OPT_1_LEAD_IDENTIFIED",
             "industry": industry_from_category(row.get("category")),
-            "notes": " | ".join(notes)}
+            # dedicated columns instead of dumping into Notes
+            "website": links_input(row.get("website")),
+            "email": emails_input(row.get("emails")),
+            "rating": num(row.get("review_rating")),
+            "reviewCount": num(row.get("review_count")),
+            "fullAddress": (row.get("address") or "").strip()}
     if owner: lead["owner"] = owner.upper()
-    return {k: v for k, v in lead.items() if v not in (None, "")}
+    return {k: v for k, v in lead.items() if v not in (None, "", [])}
 
 # ---------------- main ----------------
 def main():
