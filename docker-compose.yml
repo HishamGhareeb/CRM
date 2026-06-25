@@ -31,7 +31,8 @@ services:
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-RAL CRM}
       EMAIL_SYSTEM_ADDRESS: ${EMAIL_SYSTEM_ADDRESS:-}
-      EMAIL_DRIVER: ${EMAIL_DRIVER:-}
+      # logger = emails written to logs (no SMTP needed); set to "smtp" + creds for real delivery
+      EMAIL_DRIVER: ${EMAIL_DRIVER:-logger}
       EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST:-}
       EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-}
       EMAIL_SMTP_USER: ${EMAIL_SMTP_USER:-}
@@ -54,6 +55,8 @@ services:
     image: twentycrm/twenty:${TAG:-latest}
     restart: unless-stopped
     command: ["yarn", "worker:prod"]
+    # Wait for the server to finish DB migrations before starting, so the
+    # worker never races the server on schema init.
     environment:
       SERVER_URL: ${SERVER_URL}
       APP_SECRET: ${APP_SECRET}
@@ -64,7 +67,7 @@ services:
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-RAL CRM}
       EMAIL_SYSTEM_ADDRESS: ${EMAIL_SYSTEM_ADDRESS:-}
-      EMAIL_DRIVER: ${EMAIL_DRIVER:-}
+      EMAIL_DRIVER: ${EMAIL_DRIVER:-logger}
       EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST:-}
       EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-}
       EMAIL_SMTP_USER: ${EMAIL_SMTP_USER:-}
@@ -72,6 +75,8 @@ services:
     volumes:
       - server-local-data:/app/packages/twenty-server/.local-storage
     depends_on:
+      server:
+        condition: service_healthy
       db:
         condition: service_healthy
       redis:
