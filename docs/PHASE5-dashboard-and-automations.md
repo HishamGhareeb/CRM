@@ -50,8 +50,14 @@ Warm (3+) **23**, Deals Won **0**.
 
 ## Automations #2 & #3 (Twenty Workflows)
 
-These two need Twenty's **Workflow** builder (and #3 needs SMTP). Build under
-**Settings → Workflows → New workflow** (or the *Workflows* sidebar item).
+> **API note:** unlike the objects/fields/views/dashboard (all built via the
+> metadata API), **workflows can't be created via the API** — Twenty returns
+> "Method not allowed" on `createWorkflowVersions` for API keys and exposes no
+> builder mutations. They must be built in the in-app **Workflow** builder.
+> #3 additionally needs a **connected email account** (the Send Email action
+> sends from a connected Gmail/SMTP account, not just `EMAIL_DRIVER`).
+
+Build under the **Workflows** sidebar item → **New workflow**.
 
 ### #2 — Stage change → log an Activity
 1. Trigger: **Record is updated** → Object **Lead** → watch field **Stage**.
