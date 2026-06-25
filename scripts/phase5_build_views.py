@@ -58,7 +58,7 @@ def create_view(v):
     q = "mutation($input:CreateViewInput!){createView(input:$input){id name}}"
     return gql(q, {"input": v})["createView"]
 
-def add_filter(view_id, field, operand, value):
+def add_filter(view_id, field, operand, value=""):
     q = "mutation($input:CreateViewFilterInput!){createViewFilter(input:$input){id}}"
     gql(q, {"input": {"viewId": view_id, "fieldMetadataId": field,
                       "operand": operand, "value": value}})
@@ -80,6 +80,12 @@ def add_fields(view_id, names):
 WARM = [o["value"] for o in STAGE_OPTS if o["value"] in
         ("OPT_3_REPLIED","OPT_4_DISCOVERY_CALL_BOOKED","OPT_5_PROPOSAL_SENT",
          "OPT_6_NEGOTIATION","OPT_7_CLOSED_WON")]
+# stages 1-6 (exclude Closed Won / Closed Lost) for the overdue view
+OPEN_STAGES = [o["value"] for o in STAGE_OPTS
+               if o["value"] not in ("OPT_7_CLOSED_WON","OPT_8_CLOSED_LOST")]
+# stages 2-3 (contacted / replied) for the inactivity view
+ACTIVE_EARLY = [o["value"] for o in STAGE_OPTS
+                if o["value"] in ("OPT_2_CONTACTED","OPT_3_REPLIED")]
 
 # Twenty requires the label-identifier field (name) at the lowest position.
 COLS = ["name","industry","stage","source","owner","phone","estDeal","lastContact","nextFollowup"]
@@ -129,9 +135,31 @@ def main():
         add_fields(v["id"], ["name","industry","source","phone","lastContact"])
     ensure("Re-engage Pool", reengage)
 
+    # 5. Overdue Follow-ups (automation rule 1: follow-up past due, still open)
+    def overdue(name):
+        v = create_view({"name": name, "objectMetadataId": OBJ, "type": "TABLE",
+                         "icon": "IconAlertTriangle", "position": 5})
+        add_filter(v["id"], fid("nextFollowup"), "IS_IN_PAST")
+        add_filter(v["id"], fid("stage"), "IS", json.dumps(OPEN_STAGES))
+        add_sort(v["id"], fid("nextFollowup"), "ASC")
+        add_fields(v["id"], ["name","industry","stage","owner","nextFollowup","phone"])
+    ensure("Overdue Follow-ups", overdue)
+
+    # 6. Inactive Leads (automation rule 4: contacted/replied but gone quiet;
+    #    oldest contact first surfaces the most stale)
+    def inactive(name):
+        v = create_view({"name": name, "objectMetadataId": OBJ, "type": "TABLE",
+                         "icon": "IconClockExclamation", "position": 6})
+        add_filter(v["id"], fid("lastContact"), "IS_IN_PAST")
+        add_filter(v["id"], fid("stage"), "IS", json.dumps(ACTIVE_EARLY))
+        add_sort(v["id"], fid("lastContact"), "ASC")
+        add_fields(v["id"], ["name","industry","stage","owner","lastContact","phone"])
+    ensure("Inactive Leads", inactive)
+
     print("\nViews now on Lead:")
     for n in existing_views():
-        if n in ("Pipeline (Kanban)","Pipeline (List)","Priority Leads","Re-engage Pool"):
+        if n in ("Pipeline (Kanban)","Pipeline (List)","Priority Leads","Re-engage Pool",
+                 "Overdue Follow-ups","Inactive Leads"):
             print(f"  - {n}")
 
 if __name__ == "__main__":
