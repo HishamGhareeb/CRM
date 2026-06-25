@@ -27,3 +27,6 @@ letsencrypt/
 *.pem
 *.key
 *.crt
+
+# Seed data — real contact PII, never commit to public repo (PDPL)
+data/
