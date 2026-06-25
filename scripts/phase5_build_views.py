@@ -88,7 +88,7 @@ ACTIVE_EARLY = [o["value"] for o in STAGE_OPTS
                 if o["value"] in ("OPT_2_CONTACTED","OPT_3_REPLIED")]
 
 # Twenty requires the label-identifier field (name) at the lowest position.
-COLS = ["name","industry","stage","source","owner","phone","estDeal","lastContact","nextFollowup"]
+COLS = ["name","industry","stage","source","owner","phone","estDeal","lastContact","nextFollowup","notes"]
 
 def main():
     have = existing_views()
@@ -123,7 +123,7 @@ def main():
                          "icon": "IconStar", "position": 3})
         add_filter(v["id"], fid("stage"), "IS", json.dumps(WARM))
         add_sort(v["id"], fid("nextFollowup"), "ASC")
-        add_fields(v["id"], ["name","industry","stage","owner","nextFollowup","lastContact","phone"])
+        add_fields(v["id"], ["name","industry","stage","owner","nextFollowup","lastContact","phone","notes"])
     ensure("Priority Leads", priority)
 
     # 4. Re-engage Pool
@@ -132,7 +132,7 @@ def main():
                          "icon": "IconRefresh", "position": 4})
         add_filter(v["id"], fid("bucket"), "IS", json.dumps(["RE_ENGAGE"]))
         add_sort(v["id"], fid("lastContact"), "ASC")
-        add_fields(v["id"], ["name","industry","source","phone","lastContact"])
+        add_fields(v["id"], ["name","industry","source","phone","lastContact","notes"])
     ensure("Re-engage Pool", reengage)
 
     # 5. Overdue Follow-ups (automation rule 1: follow-up past due, still open)
@@ -142,7 +142,7 @@ def main():
         add_filter(v["id"], fid("nextFollowup"), "IS_IN_PAST")
         add_filter(v["id"], fid("stage"), "IS", json.dumps(OPEN_STAGES))
         add_sort(v["id"], fid("nextFollowup"), "ASC")
-        add_fields(v["id"], ["name","industry","stage","owner","nextFollowup","phone"])
+        add_fields(v["id"], ["name","industry","stage","owner","nextFollowup","phone","notes"])
     ensure("Overdue Follow-ups", overdue)
 
     # 6. Inactive Leads (automation rule 4: contacted/replied but gone quiet;
@@ -153,7 +153,7 @@ def main():
         add_filter(v["id"], fid("lastContact"), "IS_IN_PAST")
         add_filter(v["id"], fid("stage"), "IS", json.dumps(ACTIVE_EARLY))
         add_sort(v["id"], fid("lastContact"), "ASC")
-        add_fields(v["id"], ["name","industry","stage","owner","lastContact","phone"])
+        add_fields(v["id"], ["name","industry","stage","owner","lastContact","phone","notes"])
     ensure("Inactive Leads", inactive)
 
     print("\nViews now on Lead:")
