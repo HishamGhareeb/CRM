@@ -104,7 +104,21 @@ services:
     volumes:
       - redis-data:/data
 
+  # --- Lead scraper: gosom/google-maps-scraper in web/REST mode ---------
+  # Web UI + REST API on :8080 (localhost only; Nginx can expose /scraper
+  # later if desired). The Phase 4 bridge script drives its REST API and
+  # imports results into Twenty as Leads.
+  scraper:
+    image: gosom/google-maps-scraper:latest
+    restart: unless-stopped
+    command: ["-web", "-data-folder", "/gmaps-data"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - scraper-data:/gmaps-data
+
 volumes:
   server-local-data:
   db-data:
   redis-data:
+  scraper-data:
