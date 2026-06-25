@@ -23,35 +23,28 @@ colour-code; optionally add a conditional format on Next Follow-up in the UI.
 
 ## Dashboard
 
-A **RAL Dashboard** record is created (appears under *Dashboards* in the sidebar).
-Twenty builds dashboard charts through its visual widget editor; the per-widget
-config isn't reliably scriptable across versions, so add these widgets in the UI
-(**Dashboards → RAL Dashboard → Edit → Add widget**). Recommended widgets:
+Built automatically by **`scripts/phase5_build_dashboard.py`** — creates a
+DASHBOARD page layout with an *Overview* tab and 8 GRAPH widgets, then links it
+to the **RAL Dashboard** record (sidebar → *Dashboards*). Re-running is a no-op
+while the layout exists; to rebuild, destroy the "RAL Dashboard Layout" page
+layout and re-run.
 
-| Widget | Type | Source / config |
+| Widget | Type | Config |
 |---|---|---|
-| Active Leads | Number | Leads, count, filter Bucket = Active |
-| Warm Leads (Stage 3+) | Number | Leads, count, filter Stage in 3–7 |
-| Deals Won | Number | Leads, count, filter Stage = 7 |
-| Revenue Won (BHD) | Number | Leads, sum of Est. Deal, filter Stage = 7 |
-| Pipeline by Stage | Bar | Leads grouped by Stage (Active) |
-| Leads by Industry | Bar | Leads grouped by Industry |
-| Leads by Owner | Bar/Pie | Leads grouped by Owner |
-| Re-engage pool | Number | Leads, count, filter Bucket = Re-engage |
+| Active Leads | Number | count, filter Bucket = Active |
+| Warm Leads (3+) | Number | count, filter Stage 3–7 |
+| Re-engage Pool | Number | count, filter Bucket = Re-engage |
+| Deals Won | Number | count, filter Stage = 7 |
+| Pipeline by Stage | Bar | count grouped by Stage (Active) |
+| Leads by Bucket | Pie | count grouped by Bucket |
+| Leads by Industry | Bar | count grouped by Industry |
+| Leads by Owner | Pie | count grouped by Owner |
 
-**Live metric snapshot at build time** (sanity check the widgets against these):
-- Active Leads: **111**  (97 seed + 14 scraped)
-- Re-engage pool: **249**
-- Warm (Stage 3+): **23**
-- Deals Won: **0**
+To add more (e.g. Revenue Won = SUM of Est. Deal filtered to Stage 7), either
+extend the script or use **RAL Dashboard → Edit → Add widget** in the UI.
 
-Quick recompute any metric from the API:
-```bash
-TOKEN=$(grep ^TWENTY_API_KEY= .env | cut -d= -f2-)
-curl -s -X POST http://localhost:3000/graphql -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"query":"query{leads(first:0,filter:{bucket:{in:[ACTIVE]}}){totalCount}}"}'
-```
+**Live metric snapshot at build time:** Active **111**, Re-engage **249**,
+Warm (3+) **23**, Deals Won **0**.
 
 ---
 
