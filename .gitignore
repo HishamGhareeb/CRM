@@ -1,0 +1,29 @@
+# Secrets & environment
+.env
+.env.*
+!.env.example
+
+# Backups & runtime data
+backups/
+db-data/
+docker-data/
+*.dump
+*.sql.gz
+
+# Logs
+*.log
+logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Certs (managed by certbot on server, never committed)
+certbot/
+letsencrypt/
+*.pem
+*.key
+*.crt
