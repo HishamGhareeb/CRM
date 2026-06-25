@@ -10,9 +10,14 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPO_DIR}"
 
-# Load env (.env holds DB creds + backup config)
+# Load env (.env holds DB creds + backup config). Parsed line-by-line rather
+# than sourced, so values containing spaces (e.g. EMAIL_FROM_NAME=RAL CRM)
+# don't get executed as commands.
 if [[ -f .env ]]; then
-  set -a; . ./.env; set +a
+  while IFS='=' read -r key val; do
+    case "$key" in ''|\#*) continue ;; esac
+    export "$key=$val"
+  done < .env
 fi
 
 BACKUP_DIR="${BACKUP_DIR:-/opt/ral-crm/backups}"
