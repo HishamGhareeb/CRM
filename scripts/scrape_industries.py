@@ -74,13 +74,18 @@ def build_lead(row, industry):
     website=(row.get("website") or "").strip()
     rating=row.get("review_rating"); rc=row.get("review_count")
     pains,has_site,score,obs=L.analyze(industry,website,rating,rc)
-    emails=[e.strip() for e in (row.get("emails") or "").split(",") if e.strip()]
+    emails=[e.strip() for e in (row.get("emails") or "").split(",") if L.valid_email(e.strip())]
     ph=phone_input(row.get("phone"))
     lead={"name":name,"industry":industry,"source":"GOOGLE_MAPS","bucket":"ACTIVE",
           "stage":"OPT_1_LEAD_IDENTIFIED","owner":OWNER,
           "fullAddress":(row.get("address") or "").strip(),
           "painPoints":" | ".join(pains),"leadScore":score,"hasWebsite":has_site.upper(),
           "offerAngle":L.V.get(industry,L.DEFAULT)[2]}
+    note=["Source: Google Maps.", "Website: "+("yes" if has_site else "NO")]
+    if rating: note.append(f"Rating {rating} ({rc or 0} reviews)")
+    if pains: note.append("Pain: "+" | ".join(pains))
+    if (row.get("address") or "").strip(): note.append(row["address"].strip())
+    lead["notes"]=" | ".join(note)
     if website: lead["website"]={"primaryLinkUrl":website,"primaryLinkLabel":"Website"}
     if emails: lead["email"]={"primaryEmail":emails[0],"additionalEmails":emails[1:]}
     if rating:

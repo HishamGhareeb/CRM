@@ -44,6 +44,21 @@ def fnum(x):
     try: return float(x)
     except (TypeError, ValueError): return None
 
+_EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+_BAD_DOMAINS = ("yoursite.com","domain.com","example.com","email.com","sentry.io",
+                "wixpress.com","cloudflare.com","2x.png","2x.jpg","schema.org")
+_BAD_EXT = (".png",".jpg",".jpeg",".gif",".svg",".webp",".css",".js")
+def valid_email(e):
+    """Reject placeholders, image filenames, CDN/tracking strings the scraper mis-grabs."""
+    e = (e or "").strip().lower()
+    if not _EMAIL_RE.match(e): return False
+    if any(b in e for b in _BAD_DOMAINS): return False
+    if e.endswith(_BAD_EXT): return False
+    if e.startswith(("https@","http@","www@")): return False
+    dom = e.split("@",1)[1]
+    if len(dom.split(".")[0]) < 2: return False
+    return True
+
 def analyze(industry, website, rating, review_count):
     """Return (pains:list[str], has_website:'Yes'|'No', score:int, headline_observation)."""
     has_site = bool((website or "").strip())

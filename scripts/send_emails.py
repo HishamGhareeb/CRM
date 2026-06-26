@@ -20,6 +20,8 @@ Usage:
 """
 import argparse, json, os, smtplib, ssl, sys, time, urllib.request, urllib.error
 from email.mime.text import MIMEText
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lib_outreach as L
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def load_env():
@@ -56,7 +58,7 @@ def candidates(min_score, industry):
         after=d["pageInfo"]["endCursor"]
     res=[]
     for n in out:
-        if not (n.get("email") or {}).get("primaryEmail"): continue
+        if not L.valid_email((n.get("email") or {}).get("primaryEmail")): continue
         if not (n.get("emailDraft") or "").strip(): continue
         if (n.get("outreachStatus") or "NOT_CONTACTED") not in ("NOT_CONTACTED",): continue
         if min_score and (n.get("leadScore") or 0) < min_score: continue
@@ -77,10 +79,16 @@ def main():
     ap.add_argument("--min-score",type=int,default=0)
     ap.add_argument("--industry",default="")
     ap.add_argument("--send",action="store_true")
+    ap.add_argument("--all",action="store_true",help="send to every email-ready lead (still spaced)")
     a=ap.parse_args()
-    a.limit=min(a.limit,40)  # hard cap
 
-    leads=candidates(a.min_score,a.industry)[:a.limit]
+    pool=candidates(a.min_score,a.industry)
+    if a.all:
+        a.limit=min(len(pool),150)   # safety ceiling to protect the Gmail account
+        if len(pool)>a.limit: print(f"NOTE: {len(pool)} candidates; capping this run at {a.limit} (protects sender reputation).")
+    else:
+        a.limit=min(a.limit,40)
+    leads=pool[:a.limit]
     print(f"{len(leads)} candidate leads (limit {a.limit}, min-score {a.min_score or 0})")
     if not leads: return
 
