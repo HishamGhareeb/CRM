@@ -193,6 +193,8 @@ def main():
         f("rating","Rating","NUMBER", settings={"decimals": 1}),
         f("reviewCount","Reviews","NUMBER", settings={"decimals": 0}),
         f("fullAddress","Address","TEXT"),
+        # One-click WhatsApp outreach link (populated by outreach_setup.py)
+        f("whatsappLink","WhatsApp","LINKS"),
     ]
     lead = ensure_object(objs, {
         "nameSingular":"lead","namePlural":"leads",
