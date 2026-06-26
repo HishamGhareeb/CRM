@@ -120,7 +120,6 @@ def email_draft(company, industry, owner, observation=None):
         f"piece first (a small, fast entry package), prove it works, then build from there.\n\n"
         f"Would you be open to a 15-minute call this week so I can show you one specific thing "
         f"we could automate for {company}? If it's not a fit, I'll tell you straight.\n\n"
-        f"Best regards,\n{who}\nRAL Technologies · raltech.dev · +973 3821 8181\n\n"
-        f"(Reply STOP and I won't follow up.)"
+        f"Best regards,\n{who}\nRAL Technologies · raltech.dev · +973 3821 8181"
     )
     return subject, body
