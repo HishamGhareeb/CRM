@@ -195,6 +195,11 @@ def main():
         f("fullAddress","Address","TEXT"),
         # One-click WhatsApp outreach link (populated by outreach_setup.py)
         f("whatsappLink","WhatsApp","LINKS"),
+        # Outreach engine fields
+        f("painPoints","Pain Points","TEXT"),
+        f("leadScore","Lead Score","NUMBER", settings={"decimals": 0}),
+        f("emailDraft","Email Draft","TEXT"),
+        f("hasWebsite","Has Website","SELECT", options=opts([("Yes","green"),("No","red")])),
     ]
     lead = ensure_object(objs, {
         "nameSingular":"lead","namePlural":"leads",
