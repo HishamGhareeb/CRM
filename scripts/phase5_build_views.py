@@ -146,6 +146,16 @@ def main():
         add_fields(v["id"], ["name","industry","stage","owner","nextFollowup","phone","notes"])
     ensure("Overdue Follow-ups", overdue)
 
+    # 5b. Hot Leads — highest lead-score first, active, for prioritised outreach
+    def hot(name):
+        v = create_view({"name": name, "objectMetadataId": OBJ, "type": "TABLE",
+                         "icon": "IconFlame", "position": 5})
+        add_filter(v["id"], fid("bucket"), "IS", json.dumps(["ACTIVE"]))
+        add_sort(v["id"], fid("leadScore"), "DESC")
+        add_fields(v["id"], ["name","industry","leadScore","hasWebsite","owner","phone",
+                             "painPoints","whatsappLink"])
+    ensure("Hot Leads", hot)
+
     # 6. Inactive Leads (automation rule 4: contacted/replied but gone quiet;
     #    oldest contact first surfaces the most stale)
     def inactive(name):

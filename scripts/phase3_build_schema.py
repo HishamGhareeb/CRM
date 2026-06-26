@@ -200,6 +200,9 @@ def main():
         f("leadScore","Lead Score","NUMBER", settings={"decimals": 0}),
         f("emailDraft","Email Draft","TEXT"),
         f("hasWebsite","Has Website","SELECT", options=opts([("Yes","green"),("No","red")])),
+        f("outreachStatus","Outreach Status","SELECT", options=opts([
+            ("Not Contacted","gray"),("WhatsApp Sent","green"),("Email Sent","blue"),
+            ("Replied","purple"),("Bounced","red"),("Do Not Contact","red")])),
     ]
     lead = ensure_object(objs, {
         "nameSingular":"lead","namePlural":"leads",
