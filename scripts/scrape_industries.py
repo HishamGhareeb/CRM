@@ -139,7 +139,7 @@ def main():
                     if key in seen: continue
                     seen.add(key); batch.append(lead)
                     stats["total"]+=1; got+=1
-                    if lead.get("hasWebsite")=="No": stats["no_site"]+=1
+                    if lead.get("hasWebsite")=="NO": stats["no_site"]+=1
                     if lead.get("rating"): stats["rsum"]+=lead["rating"]; stats["rn"]+=1
                     stats["ssum"]+=lead.get("leadScore",0)
                 for i in range(0,len(batch),40):
