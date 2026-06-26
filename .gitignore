@@ -30,3 +30,6 @@ letsencrypt/
 
 # Seed data — real contact PII, never commit to public repo (PDPL)
 data/
+
+# Migration bundles — contain secrets + lead PII
+migration/
