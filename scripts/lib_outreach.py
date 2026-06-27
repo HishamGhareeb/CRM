@@ -104,13 +104,17 @@ def wa_capable(number, calling_code):
 def opener(company, industry, owner, observation=None):
     noun, pain, _ = V.get(industry or "", DEFAULT)
     who = OWNER_NAME.get(owner, "the team")
-    obs = (observation + " — ") if observation else ""
-    return (f"Hi {company} \U0001F44B I'm {who} from RAL Technologies. {obs}"
-            f"we build custom websites & automation systems for {noun} in Bahrain "
-            f"(our team has delivered software for the likes of CrediMax and Ahli United Bank). "
-            f"Many {noun} still handle {pain} by hand, so we start by fixing the single most "
-            f"painful piece fast and low-risk, then build from there. "
-            f"Could I grab 15 minutes to show you one thing we could automate for you?")
+    obs = (observation + ". ") if observation else ""
+    return (
+        f"Hi {company},\n\n"
+        f"I'm {who} from RAL Technologies — a Bahraini team, registered CR. "
+        f"We build custom websites & automation systems for {noun} here in Bahrain, "
+        f"and our team has delivered software for organisations including CrediMax "
+        f"and Ahli United Bank.\n\n"
+        f"{obs}Most {noun} still handle {pain} manually, so we fix the single most "
+        f"painful piece first — fast and low-risk — then build from there.\n\n"
+        f"Could I grab 15 minutes to show you one idea for {company}?"
+    )
 
 def whatsapp_link(company, industry, owner, num, cc, observation=None):
     d = re.sub(r"\D", "", (cc or "") + (num or ""))
@@ -125,14 +129,16 @@ def email_draft(company, industry, owner, observation=None):
     obs = (observation + ". ") if observation else ""
     body = (
         f"Hi {company} team,\n\n"
-        f"I'm {who} from RAL Technologies, a Bahrain software studio. {obs}"
-        f"We build custom websites and automation systems for {noun} — our team has delivered "
-        f"software for organisations including CrediMax and Ahli United Bank.\n\n"
-        f"Most {noun} we speak to still handle {pain} manually, which quietly costs time and "
-        f"lost customers. We don't start with a big project — we fix the single most painful "
-        f"piece first (a small, fast entry package), prove it works, then build from there.\n\n"
-        f"Would you be open to a 15-minute call this week so I can show you one specific thing "
-        f"we could automate for {company}? If it's not a fit, I'll tell you straight.\n\n"
-        f"Best regards,\n{who}\nRAL Technologies · raltech.dev · +973 3821 8181"
+        f"I'm {who} from RAL Technologies — a Bahraini software studio, registered CR. "
+        f"We build custom websites and automation systems for {noun}, and our team has "
+        f"delivered software for organisations including CrediMax and Ahli United Bank.\n\n"
+        f"{obs}Most {noun} we speak to still handle {pain} manually, which quietly costs "
+        f"time and lost customers. We don't start with a big project — we fix the single "
+        f"most painful piece first (a small, fast entry package), prove it works, then "
+        f"build from there.\n\n"
+        f"Would you be open to a 15-minute call this week? I can show you one specific "
+        f"thing we could automate for {company}.\n\n"
+        f"Best regards,\n{who}\n"
+        f"RAL Technologies — raltech.dev — +973 3821 8181"
     )
     return subject, body

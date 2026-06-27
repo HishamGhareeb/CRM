@@ -19,6 +19,8 @@ Usage:
   python scripts/outreach_setup.py              # apply
 """
 import json, os, re, sys, urllib.parse, urllib.request, urllib.error
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lib_outreach as _L  # canonical message templates
 
 DRY = "--dry-run" in sys.argv
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -121,14 +123,8 @@ DEFAULT = ("businesses", "enquiries, bookings and follow-up",
 OWNER_NAME = {"HISHAM": "Hisham", "SUHAIB": "Suhaib"}
 
 def opener(company, industry, owner):
-    noun, pain, _ = V.get(industry or "", DEFAULT)
-    who = OWNER_NAME.get(owner, "the team")
-    return (f"Hi {company} \U0001F44B I'm {who} from RAL Technologies — we build custom "
-            f"websites & automation systems for {noun} in Bahrain (our team has delivered "
-            f"software for the likes of CrediMax and Ahli United Bank). Many {noun} still "
-            f"handle {pain} by hand, so we start by fixing the single most painful piece "
-            f"fast and low-risk, then build from there. Could I grab 15 minutes to show you "
-            f"one thing we could automate for you?")
+    # delegate to the single source of truth so wording stays consistent
+    return _L.opener(company, industry, owner)
 
 def angle_for(industry):
     return V.get(industry or "", DEFAULT)[2]
