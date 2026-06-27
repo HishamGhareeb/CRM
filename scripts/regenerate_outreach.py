@@ -46,13 +46,24 @@ def main():
     while True:
         cur=f',after:"{after}"' if after else ""
         d=tw("query{leads(first:60"+cur+"){pageInfo{hasNextPage endCursor}edges{node{"
-             "id name industry owner hasWebsite phone{primaryPhoneNumber primaryPhoneCallingCode}}}}}")["leads"]
+             "id name industry source owner hasWebsite phone{primaryPhoneNumber primaryPhoneCallingCode}}}}}")["leads"]
         out+=[e["node"] for e in d["edges"]]
         if not d["pageInfo"]["hasNextPage"]: break
         after=d["pageInfo"]["endCursor"]
     print(f"{len(out)} leads")
-    wa=em=0
+    wa=em=recat=0
     for n in out:
+        # for scraped leads, fix the vertical from the business name if it was
+        # mislabelled by the search term (seed/CSV leads keep their industry)
+        ind=n.get("industry")
+        if n.get("source")=="GOOGLE_MAPS":
+            new=L.classify(None, n["name"], fallback=ind)
+            if new and new!=ind:
+                if not DRY:
+                    tw("mutation($id:UUID!,$d:LeadUpdateInput!){updateLead(id:$id,data:$d){id}}",
+                       {"id":n["id"],"d":{"industry":new}})
+                ind=new; recat+=1
+        n["industry"]=ind
         obs=observation(n.get("hasWebsite"))
         upd={}
         ph=n.get("phone") or {}
@@ -64,7 +75,8 @@ def main():
         upd["emailDraft"]=f"Subject: {subj}\n\n{body}"; em+=1
         if upd and not DRY:
             tw("mutation($id:UUID!,$d:LeadUpdateInput!){updateLead(id:$id,data:$d){id}}",{"id":n["id"],"d":upd})
-    print(f"{'[dry-run] would update' if DRY else 'Updated'} {wa} WhatsApp links, {em} email drafts")
+    print(f"{'[dry-run] would update' if DRY else 'Updated'} {wa} WhatsApp links, {em} email drafts, "
+          f"reclassified {recat} mislabelled verticals")
 
 if __name__=="__main__":
     main()

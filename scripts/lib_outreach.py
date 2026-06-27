@@ -44,6 +44,34 @@ def fnum(x):
     try: return float(x)
     except (TypeError, ValueError): return None
 
+# strong keyword -> vertical, checked in order (first match wins).
+# Used to classify a business by its Google category and/or its name, so a
+# beauty centre found under a "sports academy" search isn't mislabelled.
+_CLASSIFY = [
+    (("dental","dentist"), "MEDICAL_HEALTH"),
+    (("optic","ophthalm","eye clinic","eye center","eye centre"), "EYE_CLINIC"),
+    (("clinic","medical","hospital","polyclinic","physio","dermat","skin care",
+      "pharmac","doctor","health center","health centre","rehab","therapy"), "MEDICAL_HEALTH"),
+    (("salon","spa","beauty","barber","hair","makeup","nails","wellness","massage"), "BEAUTY_WELLNESS"),
+    (("academy","football","swimming","tennis","padel","karate","martial","taekwondo",
+      "boxing","gymnastics","sports club"), "SPORTS_ACADEMY"),
+    (("gym","fitness","crossfit","workout"), "FITNESS_GYM"),
+    (("school","nursery","kindergarten","kg ","institute","tuition","training center",
+      "training centre","education","montessori"), "EDUCATIONAL"),
+    (("cafe","coffee","cafeteria"), "CAFE"),
+    (("restaurant","kitchen","grill","shisha","bbq","dining","catering","bakery","sweets","food"), "F_B_RESTAURANT"),
+    (("real estate","properties","property","realtor","realty"), "REAL_ESTATE"),
+]
+def classify(category=None, name=None, fallback=None):
+    """Pick the vertical from the real Google category first, then the name."""
+    for text in (category, name):
+        t = (text or "").lower()
+        if not t: continue
+        for keys, enum in _CLASSIFY:
+            if any(k in t for k in keys):
+                return enum
+    return fallback
+
 _EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
 _BAD_DOMAINS = ("yoursite.com","domain.com","example.com","email.com","sentry.io",
                 "wixpress.com","cloudflare.com","2x.png","2x.jpg","schema.org")
@@ -67,7 +95,7 @@ def analyze(industry, website, rating, review_count):
 
     if not has_site:
         pains.append("No website — invisible to customers searching online; can't take bookings/orders digitally")
-        obs = "I noticed you don't have a website yet"
+        obs = "I noticed you don't have a website yet — so customers searching for you online can't easily find or book you"
     else:
         pains.append("Has a website but likely no booking/automation layer on top")
         obs = "I had a look at your website"
@@ -104,16 +132,16 @@ def wa_capable(number, calling_code):
 def opener(company, industry, owner, observation=None):
     noun, pain, _ = V.get(industry or "", DEFAULT)
     who = OWNER_NAME.get(owner, "the team")
-    obs = (observation + ". ") if observation else ""
+    hook = (observation + ". ") if observation else ""
     return (
         f"Hi {company},\n\n"
-        f"I'm {who} from RAL Technologies — a Bahraini team, registered CR. "
-        f"We build custom websites & automation systems for {noun} here in Bahrain, "
-        f"and our team has delivered software for organisations including CrediMax "
-        f"and Ahli United Bank.\n\n"
-        f"{obs}Most {noun} still handle {pain} manually, so we fix the single most "
-        f"painful piece first — fast and low-risk — then build from there.\n\n"
-        f"Could I grab 15 minutes to show you one idea for {company}?"
+        f"{who} here from RAL Technologies — a Bahraini team, registered CR. {hook}"
+        f"We build websites and booking/automation systems for {noun} — the kind that handle "
+        f"{pain} for you instead of by hand. Our team has built software for organisations "
+        f"like CrediMax and Ahli United Bank.\n\n"
+        f"We don't start with a big project — we fix the one thing costing you most first "
+        f"(fast and low-risk), then grow from there.\n\n"
+        f"Open to a quick 15-minute call? I have one specific idea for {company}."
     )
 
 def whatsapp_link(company, industry, owner, num, cc, observation=None):
@@ -129,15 +157,14 @@ def email_draft(company, industry, owner, observation=None):
     obs = (observation + ". ") if observation else ""
     body = (
         f"Hi {company} team,\n\n"
-        f"I'm {who} from RAL Technologies — a Bahraini software studio, registered CR. "
-        f"We build custom websites and automation systems for {noun}, and our team has "
-        f"delivered software for organisations including CrediMax and Ahli United Bank.\n\n"
-        f"{obs}Most {noun} we speak to still handle {pain} manually, which quietly costs "
-        f"time and lost customers. We don't start with a big project — we fix the single "
-        f"most painful piece first (a small, fast entry package), prove it works, then "
-        f"build from there.\n\n"
-        f"Would you be open to a 15-minute call this week? I can show you one specific "
-        f"thing we could automate for {company}.\n\n"
+        f"{who} here from RAL Technologies — a Bahraini software studio, registered CR. "
+        f"{obs}We build websites and booking/automation systems for {noun} — the kind that "
+        f"handle {pain} for you instead of by hand. Our team has built software for "
+        f"organisations like CrediMax and Ahli United Bank.\n\n"
+        f"We don't start with a big project — we fix the one thing costing you most first "
+        f"(a small, fast entry package), prove it works, then grow from there.\n\n"
+        f"Would you be open to a 15-minute call this week? I have one specific idea for "
+        f"{company}.\n\n"
         f"Best regards,\n{who}\n"
         f"RAL Technologies — raltech.dev — +973 3821 8181"
     )

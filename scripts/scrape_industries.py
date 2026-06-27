@@ -71,9 +71,11 @@ def phone_input(raw):
 def digits(s):
     import re; return re.sub(r"\D","",s or "")
 
-def build_lead(row, industry):
+def build_lead(row, search_industry):
     name=(row.get("title") or "").strip()
     if not name: return None
+    # classify by the business's real Google category/name, not the search term
+    industry=L.classify(row.get("category"), name, fallback=search_industry)
     website=(row.get("website") or "").strip()
     rating=row.get("review_rating"); rc=row.get("review_count")
     pains,has_site,score,obs=L.analyze(industry,website,rating,rc)
