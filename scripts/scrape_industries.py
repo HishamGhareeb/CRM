@@ -48,9 +48,12 @@ def sc_dl(jid):
     return urllib.request.urlopen(f"{SCRAPER}/api/v1/jobs/{jid}/download").read().decode("utf-8","replace")
 
 INDUSTRIES={
+ # medical first and broadest (user priority)
+ "MEDICAL_HEALTH":["medical center","dental clinic","medical clinic","polyclinic",
+   "specialist clinic","dermatology clinic","skin clinic","physiotherapy clinic",
+   "ENT clinic","orthopedic clinic","pediatric clinic","gynecology clinic","eye clinic"],
  "SPORTS_ACADEMY":["sports academy","football academy","swimming academy","tennis academy","martial arts academy"],
  "FITNESS_GYM":["gym","fitness center","ladies gym","crossfit"],
- "MEDICAL_HEALTH":["medical center","dental clinic","medical clinic","physiotherapy clinic"],
  "BEAUTY_WELLNESS":["beauty salon","spa","ladies salon","skin care clinic"],
  "EDUCATIONAL":["private school","nursery","training institute"],
  "F_B_RESTAURANT":["restaurant"],
