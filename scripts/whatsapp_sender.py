@@ -21,6 +21,8 @@ Usage:
 import argparse, json, os, sys, time, urllib.request, urllib.error
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lib_outreach as L
 
 HERE=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def load_env():
@@ -43,7 +45,7 @@ def tw(q,v=None):
     if "errors" in d: raise RuntimeError(json.dumps(d["errors"])[:300])
     return d["data"]
 
-MIN_SCORE=0; INDUSTRY=""
+MIN_SCORE=0; INDUSTRY=""; INCLUDE_LANDLINE=False; SKIPPED_LANDLINE=0
 
 def load_queue():
     out,after=[],None
@@ -55,6 +57,7 @@ def load_queue():
         d=tw(q)["leads"]; out+=[e["node"] for e in d["edges"]]
         if not d["pageInfo"]["hasNextPage"]: break
         after=d["pageInfo"]["endCursor"]
+    global SKIPPED_LANDLINE; SKIPPED_LANDLINE=0
     res=[]
     for n in out:
         if n.get("bucket")!="ACTIVE": continue
@@ -62,8 +65,13 @@ def load_queue():
         if not (n.get("whatsappLink") or {}).get("primaryLinkUrl"): continue
         if MIN_SCORE and (n.get("leadScore") or 0)<MIN_SCORE: continue
         if INDUSTRY and n.get("industry")!=INDUSTRY: continue
+        ph=n.get("phone") or {}
+        cap=L.wa_capable(ph.get("primaryPhoneNumber"), ph.get("primaryPhoneCallingCode"))
+        if cap is False and not INCLUDE_LANDLINE:   # Bahrain landline -> not on WhatsApp
+            SKIPPED_LANDLINE+=1; continue
         res.append({"id":n["id"],"name":n["name"],"industry":n.get("industry"),
-                    "score":n.get("leadScore"),"url":n["whatsappLink"]["primaryLinkUrl"]})
+                    "score":n.get("leadScore"),"url":n["whatsappLink"]["primaryLinkUrl"],
+                    "mobile":(cap is not False)})
     return res
 
 def mark_sent(lead_id):
@@ -134,11 +142,16 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--min-score",type=int,default=0)
     ap.add_argument("--industry",default="")
+    ap.add_argument("--include-landline",action="store_true",
+                    help="also queue Bahrain landline numbers (likely NOT on WhatsApp)")
     ap.add_argument("--port",type=int,default=8765)
     a=ap.parse_args(); MIN_SCORE=a.min_score; INDUSTRY=a.industry
+    global INCLUDE_LANDLINE; INCLUDE_LANDLINE=a.include_landline
     H.queue=load_queue()
-    print(f"Loaded {len(H.queue)} uncontacted leads with WhatsApp links"
+    print(f"Loaded {len(H.queue)} uncontacted MOBILE leads with WhatsApp links"
           f"{f' (score>={MIN_SCORE})' if MIN_SCORE else ''}.")
+    print(f"Skipped {SKIPPED_LANDLINE} Bahrain landline numbers (not on WhatsApp)"
+          f"{' — pass --include-landline to keep them' if SKIPPED_LANDLINE else ''}.")
     print(f"\n  ➜  Open  http://localhost:{a.port}  in your browser.\n     Ctrl+C to stop.")
     HTTPServer(("127.0.0.1",a.port),H).serve_forever()
 

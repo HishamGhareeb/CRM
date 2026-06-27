@@ -88,6 +88,19 @@ def analyze(industry, website, rating, review_count):
     score = max(0, min(100, score))
     return pains, ("Yes" if has_site else "No"), score, obs
 
+def wa_capable(number, calling_code):
+    """Heuristic: is this number likely on WhatsApp (i.e. a mobile)?
+    Bahrain (+973): mobiles start 3 or 6; landlines start 1/7, special 8.
+    Other countries: unknown -> assume capable."""
+    num = re.sub(r"\D", "", number or "")
+    cc = re.sub(r"\D", "", calling_code or "")
+    if cc in ("", "973") :
+        # strip a leading 973 if it slipped into the number
+        if num.startswith("973") and len(num) > 8: num = num[3:]
+        if not num: return None
+        return num[0] in ("3", "6")
+    return True  # non-Bahrain: can't reliably tell, allow
+
 def opener(company, industry, owner, observation=None):
     noun, pain, _ = V.get(industry or "", DEFAULT)
     who = OWNER_NAME.get(owner, "the team")
