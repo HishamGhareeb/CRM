@@ -83,19 +83,22 @@ a.btn,button{font-size:16px;font-weight:600;border:0;border-radius:10px;padding:
 <body><div class=card><h1>RAL WhatsApp Sender</h1><div class=sub>Hottest leads first · you press send · no auto-blasting</div>
 <div id=body>Loading…</div></div>
 <script>
-let cur=null;
+let cur=null,sentCount=0;
 async function next(){let r=await fetch('/api/next');let d=await r.json();render(d)}
-async function sent(){if(!cur)return;await fetch('/api/sent?id='+cur.id);next()}
+// open the chat AND auto-log as sent in one click, then advance
+async function openSend(){if(!cur)return;window.open(cur.url,'_blank','noopener');
+ await fetch('/api/sent?id='+cur.id);sentCount++;next()}
+async function markOnly(){if(!cur)return;await fetch('/api/sent?id='+cur.id);sentCount++;next()}
 async function skip(){await fetch('/api/skip?id='+(cur?cur.id:''));next()}
 function render(d){cur=d.lead;let b=document.getElementById('body');
- if(!d.lead){b.innerHTML='<div class=done>🎉 Queue empty — all caught up.</div>';return}
+ if(!d.lead){b.innerHTML=`<div class=done>🎉 Queue empty — all caught up.</div><div class=count>Sent this session: ${sentCount}</div>`;return}
  b.innerHTML=`<div class=name>${esc(d.lead.name)}</div>
  <div class=meta>${esc(d.lead.industry||'')} · score ${d.lead.score??'-'}</div>
  <div class=msg>${esc(d.msg)}</div>
- <a class="btn wa" href="${d.lead.url}" target="_blank" rel=noopener>Open WhatsApp ▶</a>
- <button class="next" onclick=sent()>Sent → Next</button>
+ <button class="btn wa" onclick=openSend()>Open WhatsApp & mark sent ▶</button>
+ <button class="next" onclick=markOnly()>Mark sent → Next</button>
  <button class="skip" onclick=skip()>Skip</button>
- <div class=count>${d.remaining} leads left in queue</div>`}
+ <div class=count>Sent this session: ${sentCount} · ${d.remaining} left in queue</div>`}
 function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
 next();
 </script></body></html>"""
