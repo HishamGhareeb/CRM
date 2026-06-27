@@ -52,8 +52,8 @@ def load_queue():
     while True:
         cur=f',after:"{after}"' if after else ""
         q=("query{leads(first:60"+cur+",orderBy:[{leadScore:DescNullsLast}]){pageInfo{hasNextPage endCursor}"
-           "edges{node{id name industry leadScore outreachStatus bucket "
-           "whatsappLink{primaryLinkUrl} phone{primaryPhoneNumber}}}}}")
+           "edges{node{id name industry owner hasWebsite leadScore outreachStatus bucket "
+           "phone{primaryPhoneNumber primaryPhoneCallingCode}}}}}")
         d=tw(q)["leads"]; out+=[e["node"] for e in d["edges"]]
         if not d["pageInfo"]["hasNextPage"]: break
         after=d["pageInfo"]["endCursor"]
@@ -62,16 +62,20 @@ def load_queue():
     for n in out:
         if n.get("bucket")!="ACTIVE": continue
         if (n.get("outreachStatus") or "NOT_CONTACTED")!="NOT_CONTACTED": continue
-        if not (n.get("whatsappLink") or {}).get("primaryLinkUrl"): continue
         if MIN_SCORE and (n.get("leadScore") or 0)<MIN_SCORE: continue
         if INDUSTRY and n.get("industry")!=INDUSTRY: continue
         ph=n.get("phone") or {}
-        cap=L.wa_capable(ph.get("primaryPhoneNumber"), ph.get("primaryPhoneCallingCode"))
+        num,cc=ph.get("primaryPhoneNumber"),ph.get("primaryPhoneCallingCode")
+        cap=L.wa_capable(num,cc)
         if cap is False and not INCLUDE_LANDLINE:   # Bahrain landline -> not on WhatsApp
             SKIPPED_LANDLINE+=1; continue
+        obs_en,obs_ar=L.observations(n.get("hasWebsite"))
+        url_en=L.whatsapp_link(n["name"],n.get("industry"),n.get("owner"),num,cc,obs_en)
+        url_ar=L.whatsapp_link_ar(n["name"],n.get("industry"),n.get("owner"),num,cc,obs_ar)
+        if not url_en: continue
         res.append({"id":n["id"],"name":n["name"],"industry":n.get("industry"),
-                    "score":n.get("leadScore"),"url":n["whatsappLink"]["primaryLinkUrl"],
-                    "mobile":(cap is not False)})
+                    "score":n.get("leadScore"),"mobile":(cap is not False),
+                    "url_en":url_en,"url_ar":url_ar})
     return res
 
 def mark_sent(lead_id):
@@ -84,27 +88,31 @@ PAGE="""<!doctype html><html><head><meta charset=utf-8><title>RAL WhatsApp Sende
 .card{max-width:640px;margin:0 auto;background:#392c54;border-radius:16px;padding:32px;box-shadow:0 8px 30px #0005}
 h1{color:#B5852A;margin:0 0 4px}.sub{opacity:.7;margin-bottom:24px}
 .name{font-size:24px;font-weight:700;margin:8px 0}.meta{opacity:.8;margin-bottom:16px}
-.msg{background:#241a3a;border-radius:10px;padding:16px;text-align:left;white-space:pre-wrap;font-size:14px;line-height:1.5;max-height:260px;overflow:auto}
-a.btn,button{font-size:16px;font-weight:600;border:0;border-radius:10px;padding:14px 22px;margin:18px 8px 0;cursor:pointer;display:inline-block;text-decoration:none}
-.wa{background:#25D366;color:#06351b}.next{background:#B5852A;color:#2E2347}.skip{background:#5a4b78;color:#F1EEF7}
+.col{display:flex;gap:14px;text-align:left;margin-top:8px}.half{flex:1}
+.lang{font-size:12px;opacity:.7;margin:6px 2px}
+.msg{background:#241a3a;border-radius:10px;padding:14px;white-space:pre-wrap;font-size:13px;line-height:1.5;max-height:300px;overflow:auto}
+.msg.ar{direction:rtl;text-align:right}
+button{font-size:15px;font-weight:600;border:0;border-radius:10px;padding:12px 18px;margin:10px 6px 0;cursor:pointer}
+.en{background:#25D366;color:#06351b}.ar{background:#2C7A77;color:#fff}.skip{background:#5a4b78;color:#F1EEF7}
 .done{font-size:20px;margin-top:40px}.count{opacity:.7;margin-top:18px;font-size:13px}</style></head>
-<body><div class=card><h1>RAL WhatsApp Sender</h1><div class=sub>Hottest leads first · you press send · no auto-blasting</div>
+<body><div class=card><h1>RAL WhatsApp Sender</h1><div class=sub>Hottest leads first · pick a language · you press send · no auto-blasting</div>
 <div id=body>Loading…</div></div>
 <script>
 let cur=null,sentCount=0;
 async function next(){let r=await fetch('/api/next');let d=await r.json();render(d)}
-// open the chat AND auto-log as sent in one click, then advance
-async function openSend(){if(!cur)return;window.open(cur.url,'_blank','noopener');
- await fetch('/api/sent?id='+cur.id);sentCount++;next()}
-async function markOnly(){if(!cur)return;await fetch('/api/sent?id='+cur.id);sentCount++;next()}
-async function skip(){await fetch('/api/skip?id='+(cur?cur.id:''));next()}
-function render(d){cur=d.lead;let b=document.getElementById('body');
+async function send(lang){if(!cur)return;window.open(lang=='ar'?cur.ar.url:cur.en.url,'_blank','noopener');
+ await fetch('/api/sent?id='+cur.lead.id);sentCount++;next()}
+async function skip(){await fetch('/api/skip?id='+(cur&&cur.lead?cur.lead.id:''));next()}
+function render(d){cur=d;let b=document.getElementById('body');
  if(!d.lead){b.innerHTML=`<div class=done>🎉 Queue empty — all caught up.</div><div class=count>Sent this session: ${sentCount}</div>`;return}
  b.innerHTML=`<div class=name>${esc(d.lead.name)}</div>
  <div class=meta>${esc(d.lead.industry||'')} · score ${d.lead.score??'-'}</div>
- <div class=msg>${esc(d.msg)}</div>
- <button class="btn wa" onclick=openSend()>Open WhatsApp & mark sent ▶</button>
- <button class="next" onclick=markOnly()>Mark sent → Next</button>
+ <div class=col>
+   <div class=half><div class=lang>English</div><div class=msg>${esc(d.en.msg)}</div>
+     <button class="en" onclick="send('en')">Send English ▶</button></div>
+   <div class=half><div class=lang>العربية</div><div class="msg ar">${esc(d.ar.msg)}</div>
+     <button class="ar" onclick="send('ar')">إرسال بالعربية ▶</button></div>
+ </div>
  <button class="skip" onclick=skip()>Skip</button>
  <div class=count>Sent this session: ${sentCount} · ${d.remaining} left in queue</div>`}
 function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
@@ -122,12 +130,16 @@ class H(BaseHTTPRequestHandler):
         if u.path=="/":
             return self._send(200,PAGE,"text/html; charset=utf-8")
         if u.path=="/api/next":
+            from urllib.parse import unquote
             lead=H.queue[0] if H.queue else None
-            msg=""
+            en=ar=""
             if lead:
-                from urllib.parse import unquote
-                msg=unquote(lead["url"].split("text=",1)[1]) if "text=" in lead["url"] else ""
-            return self._send(200,json.dumps({"lead":lead,"msg":msg,"remaining":len(H.queue)}))
+                en=unquote(lead["url_en"].split("text=",1)[1]) if "text=" in lead["url_en"] else ""
+                ar=unquote(lead["url_ar"].split("text=",1)[1]) if lead.get("url_ar") and "text=" in lead["url_ar"] else ""
+            return self._send(200,json.dumps({"lead":lead,
+                "en":{"url":lead["url_en"] if lead else "","msg":en},
+                "ar":{"url":lead.get("url_ar") if lead else "","msg":ar},
+                "remaining":len(H.queue)}))
         if u.path in("/api/sent","/api/skip"):
             lid=(qs.get("id") or [""])[0]
             if u.path=="/api/sent" and lid:

@@ -116,6 +116,55 @@ def analyze(industry, website, rating, review_count):
     score = max(0, min(100, score))
     return pains, ("Yes" if has_site else "No"), score, obs
 
+# ---- Arabic (Gulf business tone) ----------------------------------
+OWNER_NAME_AR = {"HISHAM": "هشام", "SUHAIB": "صهيب"}
+# vertical -> (noun_ar, pain_ar)
+V_AR = {
+ "SPORTS_ACADEMY": ("الأكاديميات الرياضية", "التسجيل والحضور وتحصيل الرسوم"),
+ "FITNESS_GYM": ("الصالات الرياضية ومراكز اللياقة", "الاشتراكات وحجز الحصص وتجديد العضويات"),
+ "MEDICAL_HEALTH": ("العيادات والمراكز الطبية", "الحجوزات والتذكيرات ومتابعة المرضى"),
+ "EYE_CLINIC": ("عيادات العيون", "الحجوزات والتذكيرات ومتابعة المرضى"),
+ "BEAUTY_WELLNESS": ("صالونات التجميل والسبا", "الحجوزات وإعادة الحجز عبر الرسائل"),
+ "F_B_RESTAURANT": ("المطاعم", "الطلبات والحجوزات عبر الرسائل"),
+ "CAFE": ("المقاهي", "الطلبات ومتابعة العملاء"),
+ "EDUCATIONAL": ("المدارس ومراكز التدريب", "التسجيل والرسوم والتواصل مع أولياء الأمور"),
+ "REAL_ESTATE": ("مكاتب العقارات", "عرض العقارات ومتابعة الاستفسارات"),
+}
+V_AR_DEFAULT = ("الأعمال", "الاستفسارات والحجوزات والمتابعة")
+
+def observations(has_website):
+    """Return (english, arabic) opening observation based on website presence."""
+    if has_website == "NO":
+        return ("I noticed you don't have a website yet — so customers searching for you online can't easily find or book you",
+                "لاحظت أنه ليس لديكم موقع إلكتروني بعد، مما يعني أن من يبحث عنكم عبر الإنترنت قد لا يجدكم أو يحجز بسهولة")
+    if has_website == "YES":
+        return ("I had a look at your website", "اطّلعت على موقعكم الإلكتروني")
+    return (None, None)
+
+def _lam(word):
+    """Attach the Arabic preposition 'lam' correctly: ل + الأكاديميات -> للأكاديميات."""
+    w = (word or "").strip()
+    if w.startswith("ال"): return "ل" + w[1:]   # drop the alif -> لل…
+    return "ل" + w
+
+def opener_ar(company, industry, owner, observation=None):
+    noun, pain = V_AR.get(industry or "", V_AR_DEFAULT)
+    who = OWNER_NAME_AR.get(owner, "فريق RAL")
+    hook = (observation + ". ") if observation else ""
+    return (
+        f"مرحباً {company}،\n\n"
+        f"معكم {who} من RAL Technologies — فريق بحريني وسجلنا التجاري مسجّل. {hook}"
+        f"نبني مواقع إلكترونية وأنظمة حجز وأتمتة {_lam(noun)}، تتولّى عنكم {pain} بدلاً من العمل اليدوي. "
+        f"وقد طوّر فريقنا أنظمة لمؤسسات مثل كريديماكس والبنك الأهلي المتحد.\n\n"
+        f"لا نبدأ بمشروع كبير — بل نحلّ أولاً أكثر نقطة تكلّفكم وقتاً ومالاً، بسرعة وبأقل مخاطرة، ثم نتوسّع.\n\n"
+        f"هل تمنحونني 15 دقيقة لأعرض لكم فكرة محددة لـ{company}؟"
+    )
+
+def whatsapp_link_ar(company, industry, owner, num, cc, observation=None):
+    d = re.sub(r"\D", "", (cc or "") + (num or ""))
+    if len(d) < 8: return None
+    return "https://wa.me/" + d + "?text=" + urllib.parse.quote(opener_ar(company, industry, owner, observation))
+
 def wa_capable(number, calling_code):
     """Heuristic: is this number likely on WhatsApp (i.e. a mobile)?
     Bahrain (+973): mobiles start 3 or 6; landlines start 1/7, special 8.
