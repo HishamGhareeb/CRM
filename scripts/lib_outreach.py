@@ -147,23 +147,32 @@ def _lam(word):
     if w.startswith("ال"): return "ل" + w[1:]   # drop the alif -> لل…
     return "ل" + w
 
-def opener_ar(company, industry, owner, observation=None):
+def _hook_ar(noun, pain, has_website):
+    if has_website == "NO":
+        return (f"لاحظت أنه ليس لديكم موقع إلكتروني بعد، وغالباً يعني ذلك أن {pain} "
+                f"ما زالت تُدار عبر واتساب ودفتر — يسهل أن تضيع المتابعة ويصعب التوسّع.")
+    if has_website == "YES":
+        return f"اطّلعت على موقعكم — بداية جيدة، لكن غالباً ما زالت {pain} تُدار يدوياً خلفه."
+    return f"أغلب {noun} التي نعمل معها ما زالت تدير {pain} عبر واتساب ودفتر، ما يصعّب المتابعة والتوسّع."
+
+def opener_ar(company, industry, owner, has_website=None):
     noun, pain = V_AR.get(industry or "", V_AR_DEFAULT)
     who = OWNER_NAME_AR.get(owner, "فريق RAL")
-    hook = (observation + ". ") if observation else ""
     return (
         f"مرحباً {company}،\n\n"
-        f"معكم {who} من RAL Technologies — فريق بحريني وسجلنا التجاري مسجّل. {hook}"
-        f"نبني مواقع إلكترونية وأنظمة حجز وأتمتة {_lam(noun)}، تتولّى عنكم {pain} بدلاً من العمل اليدوي. "
-        f"وقد طوّر فريقنا أنظمة لمؤسسات مثل كريديماكس والبنك الأهلي المتحد.\n\n"
-        f"لا نبدأ بمشروع كبير — بل نحلّ أولاً أكثر نقطة تكلّفكم وقتاً ومالاً، بسرعة وبأقل مخاطرة، ثم نتوسّع.\n\n"
-        f"هل تمنحونني 15 دقيقة لأعرض لكم فكرة محددة لـ{company}؟"
+        f"معكم {who} من RAL Technologies. {_hook_ar(noun, pain, has_website)}\n\n"
+        f"أغلب الشركات هنا ستقدّم لكم مجرد موقع جاهز من قالب. نحن مختلفون — فريق بحريني، "
+        f"بنى مهندسوه أنظمة بمستوى البنوك لمؤسسات مثل كريديماكس والبنك الأهلي المتحد. "
+        f"نصمّم ونبرمج ونستضيف وندعم كل شيء داخلياً، فلن تجدوا أنفسكم مع موقع نصف مكتمل "
+        f"ومبرمج مستقل اختفى.\n\n"
+        f"لا نبيعكم مشروعاً كبيراً من البداية — بل نحلّ أولاً أكثر نقطة تكلّفكم، ونثبت جدواها، ثم نتوسّع.\n\n"
+        f"هل تمنحونني 15 دقيقة؟ لديّ فكرة محددة لـ{company}."
     )
 
-def whatsapp_link_ar(company, industry, owner, num, cc, observation=None):
+def whatsapp_link_ar(company, industry, owner, num, cc, has_website=None):
     d = re.sub(r"\D", "", (cc or "") + (num or ""))
     if len(d) < 8: return None
-    return "https://wa.me/" + d + "?text=" + urllib.parse.quote(opener_ar(company, industry, owner, observation))
+    return "https://wa.me/" + d + "?text=" + urllib.parse.quote(opener_ar(company, industry, owner, has_website))
 
 def wa_capable(number, calling_code):
     """Heuristic: is this number likely on WhatsApp (i.e. a mobile)?
@@ -178,41 +187,51 @@ def wa_capable(number, calling_code):
         return num[0] in ("3", "6")
     return True  # non-Bahrain: can't reliably tell, allow
 
-def opener(company, industry, owner, observation=None):
+def _hook_en(noun, pain, has_website):
+    if has_website == "NO":
+        return (f"I noticed you don't have a website yet — which usually means {pain} are still "
+                f"run over WhatsApp and a notebook. Easy to lose track of, and hard to grow on.")
+    if has_website == "YES":
+        return (f"I had a look at your website — a solid start, but {pain} are likely still "
+                f"handled by hand behind it.")
+    return (f"Most {noun} we work with still run {pain} over WhatsApp and a notebook — "
+            f"easy to lose track of, and hard to grow on.")
+
+def opener(company, industry, owner, has_website=None):
     noun, pain, _ = V.get(industry or "", DEFAULT)
     who = OWNER_NAME.get(owner, "the team")
-    hook = (observation + ". ") if observation else ""
     return (
         f"Hi {company},\n\n"
-        f"{who} here from RAL Technologies — a Bahraini team, registered CR. {hook}"
-        f"We build websites and booking/automation systems for {noun} — the kind that handle "
-        f"{pain} for you instead of by hand. Our team has built software for organisations "
-        f"like CrediMax and Ahli United Bank.\n\n"
-        f"We don't start with a big project — we fix the one thing costing you most first "
-        f"(fast and low-risk), then grow from there.\n\n"
-        f"Open to a quick 15-minute call? I have one specific idea for {company}."
+        f"{who} here from RAL Technologies. {_hook_en(noun, pain, has_website)}\n\n"
+        f"Most agencies here would just hand you a template site. We're a different kind of shop — "
+        f"a Bahraini team whose engineers have built bank-grade systems for the likes of CrediMax "
+        f"and Ahli United Bank. We design, build, host and support the whole thing in-house, so "
+        f"you're never left with a half-finished site and a freelancer who's disappeared.\n\n"
+        f"We don't sell you a big project up front. We fix the one thing costing you most "
+        f"(for {noun}, usually {re.split(r',| and ', pain)[0].strip()}), prove it pays for itself, then grow from there.\n\n"
+        f"Worth a quick 15-minute call? I already have one specific idea for {company}."
     )
 
-def whatsapp_link(company, industry, owner, num, cc, observation=None):
+def whatsapp_link(company, industry, owner, num, cc, has_website=None):
     d = re.sub(r"\D", "", (cc or "") + (num or ""))
     if len(d) < 8: return None
-    return "https://wa.me/" + d + "?text=" + urllib.parse.quote(opener(company, industry, owner, observation))
+    return "https://wa.me/" + d + "?text=" + urllib.parse.quote(opener(company, industry, owner, has_website))
 
-def email_draft(company, industry, owner, observation=None):
+def email_draft(company, industry, owner, has_website=None):
     """Return (subject, body) — short cold email in RAL Proposal/Playbook tone."""
     noun, pain, _ = V.get(industry or "", DEFAULT)
     who = OWNER_NAME.get(owner, "Hisham")
-    subject = f"A quick idea for {company}"
-    obs = (observation + ". ") if observation else ""
+    subject = f"A sharper system for {company}"
     body = (
         f"Hi {company} team,\n\n"
-        f"{who} here from RAL Technologies — a Bahraini software studio, registered CR. "
-        f"{obs}We build websites and booking/automation systems for {noun} — the kind that "
-        f"handle {pain} for you instead of by hand. Our team has built software for "
-        f"organisations like CrediMax and Ahli United Bank.\n\n"
-        f"We don't start with a big project — we fix the one thing costing you most first "
-        f"(a small, fast entry package), prove it works, then grow from there.\n\n"
-        f"Would you be open to a 15-minute call this week? I have one specific idea for "
+        f"{who} here from RAL Technologies. {_hook_en(noun, pain, has_website)}\n\n"
+        f"Most agencies would just hand you a template site. We're a different kind of shop — a "
+        f"Bahraini team whose engineers have built bank-grade systems for the likes of CrediMax "
+        f"and Ahli United Bank. We design, build, host and support everything in-house, so you're "
+        f"never left with a half-finished site and a freelancer who's disappeared.\n\n"
+        f"We don't sell a big project up front. We fix the one thing costing you most "
+        f"(for {noun}, usually {re.split(r',| and ', pain)[0].strip()}), prove it pays for itself, then grow from there.\n\n"
+        f"Would you be open to a 15-minute call this week? I already have one specific idea for "
         f"{company}.\n\n"
         f"Best regards,\n{who}\n"
         f"RAL Technologies — raltech.dev — +973 3821 8181"

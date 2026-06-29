@@ -101,9 +101,9 @@ def build_lead(row, search_industry):
         except: pass
     if ph:
         lead["phone"]=ph
-        wl=L.whatsapp_link(name,industry,OWNER,ph["primaryPhoneNumber"],ph["primaryPhoneCallingCode"],obs)
+        wl=L.whatsapp_link(name,industry,OWNER,ph["primaryPhoneNumber"],ph["primaryPhoneCallingCode"],has_site.upper())
         if wl: lead["whatsappLink"]={"primaryLinkUrl":wl,"primaryLinkLabel":"Message on WhatsApp"}
-    subj,bdy=L.email_draft(name,industry,OWNER,obs)
+    subj,bdy=L.email_draft(name,industry,OWNER,has_site.upper())
     lead["emailDraft"]=f"Subject: {subj}\n\n{bdy}"
     return {k:v for k,v in lead.items() if v not in (None,"",[])}
 

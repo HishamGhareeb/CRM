@@ -69,9 +69,9 @@ def load_queue():
         cap=L.wa_capable(num,cc)
         if cap is False and not INCLUDE_LANDLINE:   # Bahrain landline -> not on WhatsApp
             SKIPPED_LANDLINE+=1; continue
-        obs_en,obs_ar=L.observations(n.get("hasWebsite"))
-        url_en=L.whatsapp_link(n["name"],n.get("industry"),n.get("owner"),num,cc,obs_en)
-        url_ar=L.whatsapp_link_ar(n["name"],n.get("industry"),n.get("owner"),num,cc,obs_ar)
+        hw=n.get("hasWebsite")
+        url_en=L.whatsapp_link(n["name"],n.get("industry"),n.get("owner"),num,cc,hw)
+        url_ar=L.whatsapp_link_ar(n["name"],n.get("industry"),n.get("owner"),num,cc,hw)
         if not url_en: continue
         res.append({"id":n["id"],"name":n["name"],"industry":n.get("industry"),
                     "score":n.get("leadScore"),"mobile":(cap is not False),

@@ -64,14 +64,14 @@ def main():
                        {"id":n["id"],"d":{"industry":new}})
                 ind=new; recat+=1
         n["industry"]=ind
-        obs=observation(n.get("hasWebsite"))
+        hw=n.get("hasWebsite")
         upd={}
         ph=n.get("phone") or {}
         link=L.whatsapp_link(n["name"],n.get("industry"),n.get("owner"),
-                             ph.get("primaryPhoneNumber"),ph.get("primaryPhoneCallingCode"),obs)
+                             ph.get("primaryPhoneNumber"),ph.get("primaryPhoneCallingCode"),hw)
         if link:
             upd["whatsappLink"]={"primaryLinkUrl":link,"primaryLinkLabel":"Message on WhatsApp"}; wa+=1
-        subj,body=L.email_draft(n["name"],n.get("industry"),n.get("owner"),obs)
+        subj,body=L.email_draft(n["name"],n.get("industry"),n.get("owner"),hw)
         upd["emailDraft"]=f"Subject: {subj}\n\n{body}"; em+=1
         if upd and not DRY:
             tw("mutation($id:UUID!,$d:LeadUpdateInput!){updateLead(id:$id,data:$d){id}}",{"id":n["id"],"d":upd})
