@@ -99,6 +99,9 @@ def main():
         sys.exit("Add a THROWAWAY account to .env: IG_USER=... IG_PASS=...  (never your real IG)")
     from instagrapi import Client
     cl=Client(); cl.delay_range=[3,8]
+    # interactive challenge handler — when IG sends a code to the account's
+    # email/SMS, paste it here (only works when run in your own terminal)
+    cl.challenge_code_handler = lambda username, choice: input(f"  Enter the code IG sent via {choice}: ").strip()
     sess=os.path.join(HERE,"data",f"ig-{IG_USER}.json")
     try:
         cl.load_settings(sess); cl.login(IG_USER, IG_PASS); print("session loaded")
