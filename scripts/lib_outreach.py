@@ -148,16 +148,17 @@ def _lam(word):
     return "ل" + w
 
 def _hook_ar(has_website):
-    return "لاحظت أنه ليس لديكم موقع إلكتروني بعد. " if has_website == "NO" else ""
+    # natural Bahraini dialect, not MSA
+    return "لاحظت إنه ما عندكم موقع إلكتروني لين الحين. " if has_website == "NO" else ""
 
 def opener_ar(company, industry, owner, has_website=None):
     noun, _ = V_AR.get(industry or "", V_AR_DEFAULT)
     who = OWNER_NAME_AR.get(owner, "فريق RAL")
     return (
-        f"مرحباً {company}، أنا {who} من RAL Technologies — فريق برمجي بحريني وسجلنا التجاري مسجّل "
-        f"(طوّرنا أنظمة لكريديماكس والبنك الأهلي المتحد). {_hook_ar(has_website)}"
-        f"نؤسّس مواقع وأنظمة حجز وأتمتة {_lam(noun)}.\n\n"
-        f"من الأنسب لديكم — المالك أو المدير — لترتيب مكالمة قصيرة (15 دقيقة) هذا الأسبوع؟"
+        f"السلام عليكم، أنا {who} من RAL Technologies — شركة برمجيات بحرينية ومرخّصة بسجل تجاري، "
+        f"واشتغلنا على أنظمة لجهات مثل كريديماكس والبنك الأهلي المتحد. {_hook_ar(has_website)}"
+        f"نسوّي مواقع وأنظمة حجز وأتمتة {_lam(noun)}.\n\n"
+        f"منو الأنسب نتواصل معاه عندكم — صاحب العمل أو المدير — عشان نرتّب مكالمة قصيرة (15 دقيقة) هالأسبوع؟"
     )
 
 def whatsapp_link_ar(company, industry, owner, num, cc, has_website=None):
