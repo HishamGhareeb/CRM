@@ -111,10 +111,13 @@ def run_job(term,area,depth,max_time):
     job=sc_post("/api/v1/jobs",{"name":f"{term}-{area}","keywords":[f"{term} {area}"],"lang":"en","depth":depth,"max_time":max_time*1_000_000_000,"email":True})
     jid=job["id"]
     waited=0
-    while waited<max_time+120:
+    st="pending"
+    while waited<max_time+180:
         time.sleep(8); waited+=8
         st=next((j["Status"] for j in sc_get("/api/v1/jobs") if j["ID"]==jid),"unknown")
-        if st!="working": break
+        if st not in ("working","pending"): break   # wait through the queue, not just 'working'
+    if st!="ok":
+        print(f"    job ended status={st}, skipping"); return []
     try: return list(csv.DictReader(io.StringIO(sc_dl(jid))))
     except Exception as e: print(f"    download failed: {e}"); return []
 
