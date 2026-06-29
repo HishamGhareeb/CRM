@@ -57,7 +57,6 @@ INDUSTRIES={
  "BEAUTY_WELLNESS":["beauty salon","spa","ladies salon","skin care clinic"],
  "EDUCATIONAL":["private school","nursery","training institute"],
  "F_B_RESTAURANT":["restaurant"],
- "CAFE":["cafe","coffee shop"],
  "REAL_ESTATE":["real estate"],
 }
 AREAS=["Manama","Riffa","Seef","Muharraq","Saar","Budaiya","Isa Town","Hamad Town","Sitra","Adliya","Juffair","Amwaj"]
