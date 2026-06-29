@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 """
-RAL CRM — Instagram lead scraper (DIY, USE A THROWAWAY ACCOUNT).
+RAL CRM — Instagram lead scraper (open-source instagrapi, THROWAWAY ACCOUNT).
 
-⚠️  Instagram prohibits scraping and BANS accounts that do it. This logs in with
-    an account (required — anonymous access is 403'd) and pulls PUBLIC business
-    profile data. Use a disposable account, keep volume low, and expect Meta to
-    break this periodically. Your real/business IG must NOT be used here.
+Uses instagrapi (https://github.com/subzeroid/instagrapi, MIT) — an open-source
+Instagram private-API client. It returns a business profile's PUBLIC contact
+fields directly (public_email, contact_phone_number, category, external_url,
+followers), so no bio-guessing.
 
-Pulls per public profile: name, bio, category, external link, followers, and
-any phone/email/WhatsApp found in the bio. Maps to Leads (source = Instagram),
-enriches + dedupes + imports like the Google Maps scraper.
+⚠️  Instagram bans accounts that scrape. Use a DISPOSABLE account, keep volume
+    low, expect Meta to break this periodically. NEVER use your real/business IG.
 
-Setup: put a throwaway account in .env  ->  IG_USER=...  IG_PASS=...
+Maps profiles to Leads (source = Instagram), enriches + dedupes + imports like
+the Google Maps scraper. Session is cached so you only log in once.
+
+Setup:  .env  ->  IG_USER=throwaway   IG_PASS=...
 Usage:
-  python scripts/scrape_instagram.py --usernames cafe_x,gym_y,clinic_z
+  python scripts/scrape_instagram.py --usernames gym_x,salon_y,clinic_z
   python scripts/scrape_instagram.py --usernames-file handles.txt
   python scripts/scrape_instagram.py --hashtag bahrainsalon --limit 25
 """
@@ -44,36 +46,40 @@ def tw(q,v=None):
     if "errors" in d: raise RuntimeError(json.dumps(d["errors"])[:300])
     return d["data"]
 
-# ---- contact extraction from bio ----
-def parse_phone(text):
-    t=(text or "").replace("‏","").replace("‎","")
-    # +973 / 973 / bare 8-digit Bahrain mobile
-    m=re.search(r"(\+?973[\s-]?\d{4}[\s-]?\d{4})", t) or re.search(r"\b([36]\d{3}[\s-]?\d{4})\b", t)
-    if not m: return None
-    digits=re.sub(r"\D","",m.group(1))
-    if digits.startswith("973"): digits=digits[3:]
-    if len(digits)!=8: return None
-    return {"primaryPhoneNumber":digits,"primaryPhoneCallingCode":"+973","primaryPhoneCountryCode":"BH"}
+def phone_from_user(u):
+    cc=re.sub(r"\D","",(u.public_phone_country_code or "")) or "973"
+    num=re.sub(r"\D","",(u.public_phone_number or ""))
+    if not num:
+        raw=re.sub(r"\D","",(u.contact_phone_number or "")) or _phone_from_bio(u.biography)
+        if not raw: return None
+        if raw.startswith("973"): raw=raw[3:]
+        if len(raw)!=8: return None
+        num=raw
+    return {"primaryPhoneNumber":num,"primaryPhoneCallingCode":"+"+cc,
+            "primaryPhoneCountryCode":"BH" if cc=="973" else ""}
 
-def parse_email(text):
-    m=re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text or "")
-    return m.group(0) if m and L.valid_email(m.group(0)) else None
+def _phone_from_bio(text):
+    m=re.search(r"(\+?973[\s-]?\d{4}[\s-]?\d{4})", text or "") or re.search(r"\b([36]\d{3}[\s-]?\d{4})\b", text or "")
+    return re.sub(r"\D","",m.group(1)) if m else ""
 
-def build_lead(p, seen):
-    name=(p.full_name or p.username or "").strip()
+def build_lead(u):
+    name=(u.full_name or u.username or "").strip()
     if not name: return None
-    bio=p.biography or ""
-    industry=L.classify(p.business_category_name, name+" "+bio, fallback="UNKNOWN")
-    website=(p.external_url or "").strip()
+    bio=u.biography or ""
+    cat=u.business_category_name or u.category_name or u.category or ""
+    industry=L.classify(cat, name+" "+bio, fallback="UNKNOWN")
+    website=(str(u.external_url) if u.external_url else "").strip()
     has_site="YES" if website and "linktr.ee" not in website and "instagram.com" not in website else "NO"
-    ph=parse_phone(bio); email=parse_email(bio)
-    score=40+L.PRIORITY.get(industry,6)+(8 if (p.followers or 0)>=1000 else 0)+(5 if has_site=="NO" else 0)
+    email=(u.public_email or "").strip()
+    ph=phone_from_user(u)
+    fol=u.follower_count or 0
+    score=40+L.PRIORITY.get(industry,6)+(8 if fol>=1000 else 0)+(5 if has_site=="NO" else 0)
     lead={"name":name,"industry":industry,"source":"INSTAGRAM","bucket":"ACTIVE",
           "stage":"OPT_1_LEAD_IDENTIFIED","owner":OWNER,
           "hasWebsite":has_site,"leadScore":max(0,min(100,score)),
-          "notes":f"Instagram @{p.username} | {p.followers} followers"+(f" | {bio[:120]}" if bio else "")}
+          "notes":f"Instagram @{u.username} | {fol} followers"+(f" | {cat}" if cat else "")+(f" | {bio[:120]}" if bio else "")}
     if website: lead["website"]={"primaryLinkUrl":website,"primaryLinkLabel":"Website"}
-    if email: lead["email"]={"primaryEmail":email,"additionalEmails":[]}
+    if email and L.valid_email(email): lead["email"]={"primaryEmail":email,"additionalEmails":[]}
     if ph:
         lead["phone"]=ph
         wl=L.whatsapp_link(name,industry,OWNER,ph["primaryPhoneNumber"],ph["primaryPhoneCallingCode"],has_site)
@@ -91,48 +97,40 @@ def main():
     a=ap.parse_args()
     if not IG_USER or not IG_PASS:
         sys.exit("Add a THROWAWAY account to .env: IG_USER=... IG_PASS=...  (never your real IG)")
-    import instaloader
-    il=instaloader.Instaloader(quiet=True, download_pictures=False, download_videos=False,
-                               download_comments=False, save_metadata=False)
-    sess=os.path.join(HERE,"data",f"ig-session-{IG_USER}")
+    from instagrapi import Client
+    cl=Client(); cl.delay_range=[3,8]
+    sess=os.path.join(HERE,"data",f"ig-{IG_USER}.json")
     try:
-        il.load_session_from_file(IG_USER, sess); print("loaded saved session")
-    except FileNotFoundError:
-        print("logging in (first run)…")
-        il.login(IG_USER, IG_PASS); il.save_session_to_file(sess)
+        cl.load_settings(sess); cl.login(IG_USER, IG_PASS); print("session loaded")
+    except Exception:
+        print("logging in (first run)…"); cl.login(IG_USER, IG_PASS); cl.dump_settings(sess)
 
-    # collect target usernames
-    targets=[]
-    if a.usernames: targets+= [u.strip().lstrip("@") for u in a.usernames.split(",") if u.strip()]
+    targets=[u.strip().lstrip("@") for u in a.usernames.split(",") if u.strip()]
     if a.usernames_file and os.path.exists(a.usernames_file):
         targets+=[l.strip().lstrip("@") for l in open(a.usernames_file,encoding="utf-8") if l.strip()]
     if a.hashtag:
-        print(f"discovering profiles under #{a.hashtag} (rate-limited)…")
-        tag=instaloader.Hashtag.from_name(il.context, a.hashtag.lstrip("#"))
-        seen_u=set()
-        for post in tag.get_posts():
-            u=post.owner_username
-            if u not in seen_u:
-                seen_u.add(u); targets.append(u)
-            if len(targets)>=a.limit: break
-            time.sleep(random.uniform(2,5))
+        print(f"discovering under #{a.hashtag}…")
+        for m in cl.hashtag_medias_recent(a.hashtag.lstrip("#"), amount=a.limit*2):
+            targets.append(m.user.username)
+            if len(set(targets))>=a.limit: break
     targets=list(dict.fromkeys(targets))[:a.limit]
     print(f"{len(targets)} profiles to fetch")
 
-    seen={(n["node"]["name"].lower(),) for n in
+    seen={n["node"]["name"].lower() for n in
           tw("query{leads(first:2000){edges{node{name}}}}")["leads"]["edges"]}
     batch=[]
-    for i,u in enumerate(targets):
+    for u in targets:
         try:
-            p=instaloader.Profile.from_username(il.context,u)
-            lead=build_lead(p,seen)
+            user=cl.user_info_by_username(u)
+            lead=build_lead(user)
             if not lead: continue
-            if (lead["name"].lower(),) in seen: print(f"  = {u}: dup, skip"); continue
-            seen.add((lead["name"].lower(),)); batch.append(lead)
-            print(f"  + {u} -> {lead['name'][:28]} [{lead['industry']}] score {lead['leadScore']}")
+            if lead["name"].lower() in seen: print(f"  = {u}: dup"); continue
+            seen.add(lead["name"].lower()); batch.append(lead)
+            c="email" if lead.get("email") else ("phone" if lead.get("phone") else "no-contact")
+            print(f"  + @{u} -> {lead['name'][:26]} [{lead['industry']}] {c} score {lead['leadScore']}")
         except Exception as e:
-            print(f"  ! {u}: {type(e).__name__} {str(e)[:80]}")
-        time.sleep(random.uniform(8,18))   # hard rate-limit to reduce ban risk
+            print(f"  ! @{u}: {type(e).__name__} {str(e)[:90]}")
+        time.sleep(random.uniform(6,14))   # rate-limit to reduce ban risk
     if batch:
         for j in range(0,len(batch),40):
             tw("mutation($d:[LeadCreateInput]!){createLeads(data:$d){id}}",{"d":batch[j:j+40]})
