@@ -156,7 +156,7 @@ def opener_ar(company, industry, owner, has_website=None):
     who = OWNER_NAME_AR.get(owner, "فريق RAL")
     return (
         f"السلام عليكم، أنا {who} من RAL Technologies — شركة برمجيات بحرينية ومرخّصة بسجل تجاري، "
-        f"واشتغلنا على أنظمة لجهات مثل كريديماكس والبنك الأهلي المتحد. {_hook_ar(has_website)}"
+        f"واشتغلنا على أنظمة لجهات مثل كريديماكس والبنك الأهلي المتحد. "
         f"نسوّي مواقع وأنظمة حجز و automation {_lam(noun)}.\n\n"
         f"منو الأنسب نتواصل معاه عندكم — صاحب العمل أو المدير — عشان نرتّب مكالمة قصيرة (15 دقيقة) هالأسبوع؟"
     )
@@ -187,7 +187,7 @@ def opener(company, industry, owner, has_website=None):
     who = OWNER_NAME.get(owner, "the team")
     return (
         f"Hi {company}, I'm {who} from RAL Technologies — a Bahraini software team, registered CR "
-        f"(we've built systems for CrediMax & Ahli United Bank). {_hook_en(has_website)}"
+        f"(we've built systems for CrediMax & Ahli United Bank). "
         f"We set up websites + online booking & automation for {noun}.\n\n"
         f"Who's the best person — the owner or manager — to arrange a quick 15-minute call with this week?"
     )
@@ -205,7 +205,7 @@ def email_draft(company, industry, owner, has_website=None):
     body = (
         f"Hi {company} team,\n\n"
         f"I'm {who} from RAL Technologies — a Bahraini software team, registered CR (we've built "
-        f"systems for CrediMax & Ahli United Bank). {_hook_en(has_website)}We set up websites + "
+        f"systems for CrediMax & Ahli United Bank). We set up websites + "
         f"online booking & automation for {noun}.\n\n"
         f"Who's the best person — the owner or manager — to arrange a quick 15-minute call with "
         f"this week?\n\n"
