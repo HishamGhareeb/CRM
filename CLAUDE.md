@@ -8,7 +8,9 @@
 - Deployed on Oracle Cloud Free Tier (Ubuntu 24.04 ARM) at crm.raltech.dev
 
 ## Brand
-- Plum #2E2347 / Gold #B5852A / Teal #2C7A77 / Lilac #F1EEF7 / Font Inter
+- Plum #2B1B3D / Lilac #D1C4E9 / Font Inter — RAL's actual brand palette
+  (matches every RAL proposal/deck generator in the main workspace repo).
+  Logo assets + generator: `brand/` (see `brand/generate-logos.py`).
 
 ## Rules
 - Never hardcode secrets — .env only

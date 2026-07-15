@@ -84,16 +84,16 @@ def mark_sent(lead_id):
                           "lastContact":time.strftime("%Y-%m-%d")}})
 
 PAGE="""<!doctype html><html><head><meta charset=utf-8><title>RAL WhatsApp Sender</title>
-<style>body{font-family:Inter,system-ui,sans-serif;background:#2E2347;color:#F1EEF7;margin:0;padding:40px;text-align:center}
-.card{max-width:640px;margin:0 auto;background:#392c54;border-radius:16px;padding:32px;box-shadow:0 8px 30px #0005}
-h1{color:#B5852A;margin:0 0 4px}.sub{opacity:.7;margin-bottom:24px}
+<style>body{font-family:Inter,system-ui,sans-serif;background:#2B1B3D;color:#D1C4E9;margin:0;padding:40px;text-align:center}
+.card{max-width:640px;margin:0 auto;background:#3A2A54;border-radius:16px;padding:32px;box-shadow:0 8px 30px #0005}
+h1{color:#D1C4E9;margin:0 0 4px}.sub{opacity:.7;margin-bottom:24px}
 .name{font-size:24px;font-weight:700;margin:8px 0}.meta{opacity:.8;margin-bottom:16px}
 .col{display:flex;gap:14px;text-align:left;margin-top:8px}.half{flex:1}
 .lang{font-size:12px;opacity:.7;margin:6px 2px}
-.msg{background:#241a3a;border-radius:10px;padding:14px;white-space:pre-wrap;font-size:13px;line-height:1.5;max-height:300px;overflow:auto}
+.msg{background:#211530;border-radius:10px;padding:14px;white-space:pre-wrap;font-size:13px;line-height:1.5;max-height:300px;overflow:auto}
 .msg.ar{direction:rtl;text-align:right}
 button{font-size:15px;font-weight:600;border:0;border-radius:10px;padding:12px 18px;margin:10px 6px 0;cursor:pointer}
-.en{background:#25D366;color:#06351b}.ar{background:#2C7A77;color:#fff}.skip{background:#5a4b78;color:#F1EEF7}
+.en{background:#25D366;color:#06351b}.ar{background:#D1C4E9;color:#2B1B3D}.skip{background:#5a4a72;color:#D1C4E9}
 .done{font-size:20px;margin-top:40px}.count{opacity:.7;margin-top:18px;font-size:13px}</style></head>
 <body><div class=card><h1>RAL WhatsApp Sender</h1><div class=sub>Hottest leads first · pick a language · you press send · no auto-blasting</div>
 <div id=body>Loading…</div></div>
