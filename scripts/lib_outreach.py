@@ -213,3 +213,22 @@ def email_draft(company, industry, owner, has_website=None):
         f"RAL Technologies — raltech.dev — +973 3821 8181"
     )
     return subject, body
+
+def email_draft_ar(company, industry, owner, has_website=None):
+    """Return (subject, body) — Arabic Gulf-tone counterpart to email_draft(),
+    same offer/credentials, natural Bahraini/Gulf business dialect (matches
+    opener_ar's voice) rather than a literal MSA translation."""
+    noun, _ = V_AR.get(industry or "", V_AR_DEFAULT)
+    who = OWNER_NAME_AR.get(owner, "فريق RAL")
+    subject = f"مكالمة سريعة بخصوص {company}؟"
+    body = (
+        f"مرحباً فريق {company}،\n\n"
+        f"أنا {who} من RAL Technologies — شركة برمجيات بحرينية ومرخّصة بسجل تجاري، "
+        f"اشتغلنا على أنظمة لجهات مثل كريديماكس والبنك الأهلي المتحد. "
+        f"نسوّي مواقع وأنظمة حجز و automation {_lam(noun)}.\n\n"
+        f"منو الأنسب نتواصل معاه عندكم — صاحب العمل أو المدير — عشان نرتّب مكالمة قصيرة "
+        f"(15 دقيقة) هالأسبوع؟\n\n"
+        f"مع تحياتي،\n{who}\n"
+        f"RAL Technologies — raltech.dev — +973 3821 8181"
+    )
+    return subject, body

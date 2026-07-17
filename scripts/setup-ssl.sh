@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
 # =====================================================================
-# RAL CRM — Phase 1: Nginx site + Let's Encrypt SSL for crm.raltech.dev
+# RAL CRM — Phase 1: Nginx site + Let's Encrypt SSL
 # Run AFTER setup-server.sh and AFTER DNS A-record points to this server.
-#   bash scripts/setup-ssl.sh
+#   bash scripts/setup-ssl.sh                  # uses DOMAIN/CERTBOT_EMAIL from .env
+#   bash scripts/setup-ssl.sh other.domain.com someone@example.com   # override
 # =====================================================================
 set -euo pipefail
 
-DOMAIN="crm.raltech.dev"
-EMAIL="info@raltech.dev"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -f "${REPO_DIR}/.env" ]]; then set -a; source "${REPO_DIR}/.env"; set +a; fi
+
+DOMAIN="${1:-${DOMAIN:-crm.raltech.dev}}"
+EMAIL="${2:-${CERTBOT_EMAIL:-${EMAIL_SYSTEM_ADDRESS:-info@raltech.dev}}}"
 SITE_SRC="${REPO_DIR}/nginx/${DOMAIN}.conf"
+if [[ ! -f "${SITE_SRC}" ]]; then
+  echo "No nginx/${DOMAIN}.conf found — copy nginx/crm.raltech.dev.conf to that"
+  echo "filename and replace the domain inside it, then re-run."
+  exit 1
+fi
 SITE_AVAIL="/etc/nginx/sites-available/${DOMAIN}.conf"
 SITE_ENABLED="/etc/nginx/sites-enabled/${DOMAIN}.conf"
 

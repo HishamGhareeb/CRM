@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # =====================================================================
 # RAL CRM — Phase 1: base server bootstrap
-# Target: Oracle Cloud Free Tier, Ubuntu 24.04 Minimal (aarch64/ARM)
+# Target: any Ubuntu 22.04/24.04 server, x86_64 or ARM64 (Twenty's Docker
+# images are multi-arch — no architecture-specific setup needed).
 # Run as a sudo-capable user:  bash scripts/setup-server.sh
 #
 # Installs: Docker Engine + Compose plugin, Nginx, certbot.
@@ -9,11 +10,7 @@
 # =====================================================================
 set -euo pipefail
 
-echo "==> RAL CRM server bootstrap starting"
-
-if [[ "$(uname -m)" != "aarch64" ]]; then
-  echo "WARNING: expected aarch64 (ARM). Detected $(uname -m). Continuing anyway."
-fi
+echo "==> RAL CRM server bootstrap starting (detected arch: $(uname -m))"
 
 echo "==> Updating apt and installing prerequisites"
 sudo apt-get update -y
@@ -44,7 +41,8 @@ echo "==> Installing Nginx + certbot"
 sudo apt-get install -y nginx certbot python3-certbot-nginx
 sudo mkdir -p /var/www/certbot
 
-# ---- Firewall (Oracle security list also needs 80/443/22 open) -----
+# ---- Firewall (if hosted on a cloud VM, also open 80/443/22 in its
+#      network security group / security list, separately from ufw) -----
 echo "==> Configuring host firewall (ufw)"
 sudo ufw allow OpenSSH
 sudo ufw allow 80/tcp

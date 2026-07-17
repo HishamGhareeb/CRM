@@ -193,12 +193,16 @@ def main():
         f("rating","Rating","NUMBER", settings={"decimals": 1}),
         f("reviewCount","Reviews","NUMBER", settings={"decimals": 0}),
         f("fullAddress","Address","TEXT"),
+        f("country","Country","SELECT", options=opts([
+            ("Bahrain","green"),("Saudi Arabia","turquoise"),("UAE","sky"),
+            ("Kuwait","blue"),("Qatar","purple"),("Oman","pink"),("Other","gray")])),
         # One-click WhatsApp outreach link (populated by outreach_setup.py)
         f("whatsappLink","WhatsApp","LINKS"),
         # Outreach engine fields
         f("painPoints","Pain Points","TEXT"),
         f("leadScore","Lead Score","NUMBER", settings={"decimals": 0}),
         f("emailDraft","Email Draft","TEXT"),
+        f("emailDraftAr","Email Draft (Arabic)","TEXT"),
         f("hasWebsite","Has Website","SELECT", options=opts([("Yes","green"),("No","red")])),
         f("outreachStatus","Outreach Status","SELECT", options=opts([
             ("Not Contacted","gray"),("WhatsApp Sent","green"),("Email Sent","blue"),

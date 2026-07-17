@@ -36,8 +36,8 @@ Postgres dump, Redis dump, uploaded files, and your `.env`.
 - The scraper and its data come up with `docker compose up -d` automatically.
 - `.env` carries your `TWENTY_API_KEY`; the phase scripts read it, so you can
   re-run any of them on the new machine unchanged.
-- To instead move to the **Oracle server** (when capacity frees), follow the
-  "Deploy to the server" steps in the [README](../README.md) and restore the
-  same bundle there.
+- To instead move to the production server, follow the "Deploy to the
+  server" steps in the [README](../README.md) and restore the same bundle
+  there.
 - Python 3 is needed only to re-run the helper scripts (`scripts/*.py`); the
   CRM itself needs only Docker.

@@ -1,7 +1,7 @@
 # =====================================================================
 # RAL CRM — Twenty CRM self-host stack
-# Runs on Oracle Cloud Free Tier (Ubuntu 24.04 ARM / aarch64).
-# The Twenty images are multi-arch and run natively on ARM.
+# Runs on any standard Ubuntu 22.04/24.04 server, x86_64 or ARM64 --
+# the Twenty images are multi-arch, no architecture-specific setup needed.
 #
 # Usage on server:
 #   cp .env.example .env && edit .env
@@ -109,16 +109,26 @@ services:
   # later if desired). The Phase 4 bridge script drives its REST API and
   # imports results into Twenty as Leads.
   scraper:
-    image: gosom/google-maps-scraper:latest
+    # Pinned: :latest currently ships a driver-version mismatch bug (demands
+    # Playwright driver 1.60.0, which 404s from Microsoft's CDN, while
+    # baking in 1.61.1). Re-check for a newer tag if this starts failing.
+    image: gosom/google-maps-scraper:v1.16.3
     restart: unless-stopped
     command: ["-web", "-data-folder", "/gmaps-data"]
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
       - scraper-data:/gmaps-data
+      # The gosom image occasionally ships a Playwright driver at this path
+      # that doesn't match the version its own code expects, which then
+      # fails hard instead of re-downloading ("driver exists but version
+      # not X.XX.X"). Mounting an empty volume here hides the stale driver
+      # so it re-downloads clean on first job run.
+      - scraper-playwright:/opt/ms-playwright-go
 
 volumes:
   server-local-data:
   db-data:
   redis-data:
   scraper-data:
+  scraper-playwright:

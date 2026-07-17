@@ -21,6 +21,10 @@ Thumbs.db
 .vscode/
 *.swp
 
+# Python
+__pycache__/
+*.pyc
+
 # Certs (managed by certbot on server, never committed)
 certbot/
 letsencrypt/

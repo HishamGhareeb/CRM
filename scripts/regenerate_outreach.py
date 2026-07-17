@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-RAL CRM — regenerate every lead's WhatsApp link + email draft from the current
-templates in lib_outreach (single source of truth). Run after editing the
-opener/email wording so all stored assets are refreshed.
+RAL CRM — regenerate every lead's WhatsApp link + email draft (English +
+Arabic) from the current templates in lib_outreach (single source of truth).
+Run after editing the opener/email wording so all stored assets are
+refreshed, or once to backfill emailDraftAr on leads scraped before it existed.
 
 Observation is derived from the Has Website flag where present.
 
@@ -73,6 +74,8 @@ def main():
             upd["whatsappLink"]={"primaryLinkUrl":link,"primaryLinkLabel":"Message on WhatsApp"}; wa+=1
         subj,body=L.email_draft(n["name"],n.get("industry"),n.get("owner"),hw)
         upd["emailDraft"]=f"Subject: {subj}\n\n{body}"; em+=1
+        subj_ar,body_ar=L.email_draft_ar(n["name"],n.get("industry"),n.get("owner"),hw)
+        upd["emailDraftAr"]=f"Subject: {subj_ar}\n\n{body_ar}"
         if upd and not DRY:
             tw("mutation($id:UUID!,$d:LeadUpdateInput!){updateLead(id:$id,data:$d){id}}",{"id":n["id"],"d":upd})
     print(f"{'[dry-run] would update' if DRY else 'Updated'} {wa} WhatsApp links, {em} email drafts, "

@@ -45,6 +45,20 @@ python scripts/phase4_scrape_to_leads.py "cafe Adliya" --depth 2 --owner Hisham 
 > Keep scraping to **public business data** (name, public phone, website,
 > public email) per Bahrain PDPL. Avoid LinkedIn bulk scraping.
 
+**If the scraper fails with `could not install driver` / a CDN 404:**
+Microsoft retired the standalone Playwright "driver" zip that gosom's Go
+scraper fetches (Python/JS Playwright are unaffected — they bundle their
+driver instead of fetching it separately), so every gosom image tag hits
+a dead URL on first run. Fix once per fresh scraper container:
+```bash
+bash scripts/fix-scraper-driver.sh          # assembles the driver from
+                                             # nodejs.org + npm instead
+```
+It persists in the `scraper-playwright` volume until that volume is
+removed — re-run after recreating the container or bumping the image tag
+(pinned in `docker-compose.yml`; check `docker compose logs scraper` for
+the exact driver version it's asking for if this drifts).
+
 ## 5. Backups
 - Automatic: daily 03:00 Postgres dump to `$BACKUP_DIR` (default
   `/opt/ral-crm/backups`), 14-day retention. Log: `/var/log/ral-crm-backup.log`.

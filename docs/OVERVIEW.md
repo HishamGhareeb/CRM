@@ -2,7 +2,8 @@
 
 A self-hosted, branded CRM for RAL Technologies built on Twenty CRM, with a
 Google-Maps lead-scraping + enrichment + outreach machine on top. Runs locally
-on Docker today; deploys to Oracle Cloud (or any Docker host) unchanged.
+on Docker today; deploys unchanged to any standard Ubuntu server (x86_64 or
+ARM — Twenty's images are multi-arch).
 
 ## What was built, in order
 
