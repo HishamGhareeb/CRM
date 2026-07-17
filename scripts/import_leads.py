@@ -94,7 +94,7 @@ def main():
 
     seen=existing_keys("leads")   # always dedupe against what's already here
     do("Leads", data.get("leads",[]), "LeadCreateInput", lead_enums, seen, a.dry_run)
-    pseen=set()  # priority leads keyed separately (dedupe within file only + name)
+    pseen=existing_keys("priorityLeads")
     do("PriorityLeads", data.get("priorityLeads",[]), "PriorityLeadCreateInput", prio_enums, pseen, a.dry_run)
 
     if not a.dry_run:
