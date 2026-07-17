@@ -144,8 +144,10 @@ inside it, and set `DOMAIN=<your-domain>` in `.env` before running `setup-ssl.sh
 - Secrets live only in `.env` (git-ignored). Never hardcode.
 - App containers bind to `127.0.0.1`; Nginx is the sole public entry point.
 - Seed/lead/migration data (phone numbers, contact notes) is **never
-  committed** — this GitHub repo is public; keep personal data to public
-  business info per Bahrain PDPL / Saudi PDPL as applicable to the lead's country.
+  committed**, regardless of whether this repo is public or private —
+  collaborators with repo access still shouldn't need it in git history.
+  Keep personal data to public business info per Bahrain PDPL / Saudi PDPL
+  as applicable to the lead's country.
 - Cold-email sending: ramp up volume gradually on a new sending account —
   providers (Zoho, Gmail, etc.) will flag/block a sender that jumps straight
   to high hourly volume, regardless of the provider's nominal rate limit.
