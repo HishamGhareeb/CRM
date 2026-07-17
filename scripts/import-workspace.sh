@@ -19,7 +19,7 @@ docker compose up -d db redis
 until docker compose exec -T db pg_isready -U twenty >/dev/null 2>&1; do sleep 2; done
 
 # load DB creds
-while IFS='=' read -r k v; do case "$k" in ''|\#*) continue;; esac; export "$k=$v"; done < .env
+while IFS='=' read -r k v; do k="${k%$'\r'}"; v="${v%$'\r'}"; [[ "$k" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue; export "$k=$v"; done < .env
 DB_USER="${PG_DATABASE_USER:-twenty}"; DB_NAME="${PG_DATABASE_NAME:-twenty}"
 
 echo "==> Restoring Postgres (drops & recreates schema)"

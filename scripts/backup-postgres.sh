@@ -15,7 +15,8 @@ cd "${REPO_DIR}"
 # don't get executed as commands.
 if [[ -f .env ]]; then
   while IFS='=' read -r key val; do
-    case "$key" in ''|\#*) continue ;; esac
+    key="${key%$'\r'}"; val="${val%$'\r'}"
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
     export "$key=$val"
   done < .env
 fi
